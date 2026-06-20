@@ -2200,12 +2200,13 @@ function showMatchDetail(id) {
       <div class="prob-row"><span class="prob-label">${m.away}</span><div class="prob-track"><div class="prob-fill prob-fill-lose" style="width:${prob.lose}%"></div></div><span class="prob-pct">${prob.lose}%</span></div>
     </div>` : '';
 
-  const scorersLine = (isFinished && (m.scorersHome?.length || m.scorersAway?.length)) ? `
+  const scorersData = isFinished ? getScorers(m) : { home: [], away: [] };
+  const scorersLine = (scorersData.home.length || scorersData.away.length) ? `
     <div class="modal-scorers">
       <div class="modal-scorers-title">⚽ Torschützen</div>
       <div class="scorers-row" style="font-size:0.85rem">
-        <div class="scorers-col">${formatScorers(m.scorersHome)}</div>
-        <div class="scorers-col scorers-col-away">${formatScorers(m.scorersAway)}</div>
+        <div class="scorers-col">${formatScorers(scorersData.home)}</div>
+        <div class="scorers-col scorers-col-away">${formatScorers(scorersData.away)}</div>
       </div>
     </div>` : '';
 
@@ -2445,6 +2446,29 @@ function formatScorers(scorers) {
   return scorers.map(g => `<div class="scorer-entry">⚽ ${g.name}${g.minute ? ` <span class="scorer-minute">${g.minute}'</span>` : ''}</div>`).join('');
 }
 
+// Leitet Torschützen aus dem ausführlichen Spielbericht (MATCH_LINEUPS) ab, falls auf dem
+// Match-Objekt selbst keine scorersHome/scorersAway-Liste hinterlegt ist. So muss die Info
+// nicht doppelt gepflegt werden - der Spielbericht ist die Quelle der Wahrheit für Tore.
+function getScorers(m) {
+  if (m.scorersHome || m.scorersAway) {
+    return { home: m.scorersHome || [], away: m.scorersAway || [] };
+  }
+  const lineup = MATCH_LINEUPS[m.id];
+  if (!lineup) return { home: [], away: [] };
+  const extract = (teamData) => {
+    if (!teamData) return [];
+    const all = [...(teamData.startXI || []), ...(teamData.bench || [])];
+    const scorers = [];
+    all.forEach(p => {
+      if (p.goals) {
+        for (let i = 0; i < p.goals; i++) scorers.push({ name: p.name });
+      }
+    });
+    return scorers;
+  };
+  return { home: extract(lineup.home), away: extract(lineup.away) };
+}
+
 // ========== SPIELBERICHT-RENDERING (Aufstellung, Bank, Karten, Noten) ==========
 function ratingClass(r) {
   if (r == null) return 'rating-none';
@@ -2592,6 +2616,7 @@ function renderMatchCard(m) {
   const isLive = m.status === 'live';
   const isDone = m.status === 'done';
   const isAwaiting = m.status === 'awaiting_result';
+  const scorersData = isDone ? getScorers(m) : { home: [], away: [] };
   const hasKnownScore = m.homeScore != null && m.awayScore != null;
   const homeDisplayScore = isDone ? m.homeScore : (isLive && hasKnownScore ? m.homeScore : '');
   const awayDisplayScore = isDone ? m.awayScore : (isLive && hasKnownScore ? m.awayScore : '');
@@ -2630,10 +2655,10 @@ function renderMatchCard(m) {
         <div class="form-dots">${formDots(m.awayForm)}</div>
       </div>
     </div>
-    ${isDone && (m.scorersHome?.length || m.scorersAway?.length) ? `
+    ${isDone && (scorersData.home.length || scorersData.away.length) ? `
     <div class="scorers-row">
-      <div class="scorers-col">${formatScorers(m.scorersHome)}</div>
-      <div class="scorers-col scorers-col-away">${formatScorers(m.scorersAway)}</div>
+      <div class="scorers-col">${formatScorers(scorersData.home)}</div>
+      <div class="scorers-col scorers-col-away">${formatScorers(scorersData.away)}</div>
     </div>` : ''}
     ${isDone && m.xgHome != null ? `
     <div class="xg-row">
