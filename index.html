@@ -1084,6 +1084,17 @@ function mapTeamNameToDe(enName) {
   return TEAM_NAME_EN_TO_DE[enName] || enName;
 }
 
+// Baut aus unserem Spielplan-Format (date: "DD.MM.", time: "HH:MM", MESZ) ein echtes Datum,
+// um abzuschätzen, ob ein Spiel laut Anstoßzeit gerade laufen müsste.
+function parseMatchKickoff(m) {
+  if (!m.date || !m.time) return null;
+  const [day, month] = m.date.replace(/\.$/, '').split('.').map(Number);
+  const [hour, minute] = m.time.split(':').map(Number);
+  if (!day || !month || isNaN(hour) || isNaN(minute)) return null;
+  // MESZ = UTC+2 im Sommer; als feste Jahreszahl 2026 für dieses Turnier.
+  return new Date(Date.UTC(2026, month - 1, day, hour - 2, minute));
+}
+
 // Holt den aktuellen WM-2026-Spielplan/-stand von openfootball und überschreibt Status/Ergebnis
 // in unserem MATCHES-Array, sofern ein passendes Spiel (gleiche Teams) gefunden wird.
 // Versucht zuerst jsDelivr (zuverlässiges CORS), bei Fehlschlag raw.githubusercontent.com als Fallback.
@@ -1117,7 +1128,9 @@ async function refreshLiveData() {
       const local = MATCHES.find(m => m.home === homeDe && m.away === awayDe);
       if (!local) return;
 
-      if (lm.score && Array.isArray(lm.score.ft)) {
+      const hasResult = lm.score && Array.isArray(lm.score.ft);
+
+      if (hasResult) {
         local.homeScore = lm.score.ft[0];
         local.awayScore = lm.score.ft[1];
         local.status = 'done';
@@ -1130,6 +1143,22 @@ async function refreshLiveData() {
           const forecast = calcXgForecast(local);
           if (forecast) {
             local.estimatedXg = { home: forecast.home, away: forecast.away };
+          }
+        }
+      } else if (local.status !== 'done') {
+        // openfootball liefert kein Ergebnis -> noch kein Endstand bekannt. Anhand unseres
+        // eigenen Spielplans grob abschätzen, ob das Spiel laut Anstoßzeit gerade läuft
+        // (Anstoß vor 0-130 Minuten = wahrscheinlich live), damit der "Live"-Filter etwas zeigt.
+        const kickoff = parseMatchKickoff(local);
+        if (kickoff) {
+          const minutesSinceKickoff = (Date.now() - kickoff.getTime()) / 60000;
+          if (minutesSinceKickoff >= 0 && minutesSinceKickoff <= 130) {
+            local.status = 'live';
+            local.minute = Math.min(90, Math.round(minutesSinceKickoff));
+          } else if (minutesSinceKickoff > 130) {
+            // Anstoß ist länger her, aber openfootball hat noch kein Ergebnis nachgetragen
+            // (Pflege erfolgt dort nur ca. 1x täglich von Hand) - Status unverändert lassen,
+            // statt fälschlich "beendet" ohne Ergebnis zu zeigen.
           }
         }
       }
