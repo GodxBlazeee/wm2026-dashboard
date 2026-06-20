@@ -106,6 +106,86 @@
   .scorer-minute { color: var(--accent3); font-weight: 600; }
   .modal-scorers { margin-bottom: 14px; }
   .modal-scorers-title { font-size: 0.78rem; font-weight: 700; color: var(--accent); text-align: center; margin-bottom: 8px; text-transform: uppercase; letter-spacing: .04em; }
+
+  /* SPIELBERICHT */
+  .lineup-report { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); }
+  .lineup-report-title { font-size: 0.85rem; font-weight: 800; color: var(--text); text-align: center; margin-bottom: 14px; }
+  .lineup-teams-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media(max-width:640px) { .lineup-teams-grid { grid-template-columns: 1fr; } }
+  .lineup-team-block { background: var(--card2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+  .lineup-team-title { font-size: 0.82rem; font-weight: 700; margin-bottom: 8px; }
+  .lineup-formation { font-weight: 400; color: var(--muted); font-size: 0.72rem; }
+  .lineup-subtitle { font-size: 0.68rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin: 10px 0 6px; }
+  .lineup-subtitle:first-of-type { margin-top: 0; }
+  .player-row { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; padding: 4px 2px; border-bottom: 1px solid rgba(255,255,255,.04); }
+  .player-row:last-child { border-bottom: none; }
+  .player-row-bench { opacity: 0.8; }
+  .player-number { width: 18px; flex-shrink: 0; color: var(--muted); font-weight: 700; font-size: 0.7rem; text-align: right; }
+  .player-pos-tag { width: 28px; flex-shrink: 0; color: var(--accent); font-weight: 700; font-size: 0.65rem; }
+  .player-fullname { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .player-extras { display: flex; gap: 2px; align-items: center; font-size: 0.7rem; flex-shrink: 0; }
+  .sub-info { font-size: 0.65rem; font-weight: 700; padding: 0 2px; }
+  .sub-in { color: var(--accent2); }
+  .sub-out { color: var(--red); }
+  .card-icon { display: inline-block; width: 8px; height: 11px; border-radius: 1px; margin: 0 1px; }
+  .card-yellow { background: #fbbf24; }
+  .card-red { background: var(--red); }
+  .player-rating { flex-shrink: 0; font-size: 0.7rem; font-weight: 800; padding: 1px 6px; border-radius: 5px; min-width: 30px; text-align: center; }
+  .rating-great { background: rgba(16,185,129,.22); color: #34d399; }
+  .rating-good { background: rgba(59,130,246,.22); color: #60a5fa; }
+  .rating-ok { background: rgba(245,158,11,.22); color: #fbbf24; }
+  .rating-poor { background: rgba(239,68,68,.22); color: #f87171; }
+  .rating-none { background: rgba(255,255,255,.08); color: var(--muted); }
+
+  /* PITCH VIEW (Spielfeld mit Spielerpositionen) */
+  .pitch-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; }
+  .pitch-team-label { font-size: 0.78rem; font-weight: 700; color: var(--text); }
+  .pitch-field {
+    position: relative; border-radius: 8px; overflow: hidden;
+    background-color: #1e7a3a;
+    background-image: repeating-linear-gradient(
+      0deg, rgba(255,255,255,.05) 0, rgba(255,255,255,.05) 38px,
+      transparent 38px, transparent 76px
+    );
+    box-shadow: inset 0 0 40px rgba(0,0,0,.35);
+    width: 100%; max-width: 380px; aspect-ratio: 320 / 460;
+  }
+  .pitch-svg-lines { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+  .pitch-outline { fill: none; stroke: rgba(255,255,255,.4); stroke-width: 1.5; }
+  .pitch-line { stroke: rgba(255,255,255,.4); stroke-width: 1.5; }
+  .pitch-line-fill { fill: none; stroke: rgba(255,255,255,.4); stroke-width: 1.5; }
+  .pitch-player {
+    position: absolute; transform: translate(-50%, -50%);
+    display: flex; flex-direction: column; align-items: center; gap: 1px;
+    width: 17.5%; /* ~ein Fünftel der Feldbreite, verhindert Überlappung bei 4er-Reihen */
+    pointer-events: none;
+  }
+  .pitch-player-dot {
+    width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.62rem; font-weight: 800; color: #0d2818;
+    border: 2px solid rgba(255,255,255,.85);
+    box-shadow: 0 1px 4px rgba(0,0,0,.4);
+  }
+  .pitch-player-dot.rating-great { background: #34d399; }
+  .pitch-player-dot.rating-good { background: #60a5fa; color: #0a0e1a; }
+  .pitch-player-dot.rating-ok { background: #fbbf24; }
+  .pitch-player-dot.rating-poor { background: #f87171; }
+  .pitch-player-dot.rating-none { background: #e2e8f0; }
+  .pitch-player-badges { display: flex; gap: 1px; height: 9px; align-items: center; }
+  .pitch-badge { font-size: 0.55rem; line-height: 1; }
+  .pitch-badge-yellow, .pitch-badge-red { width: 5px; height: 8px; border-radius: 1px; display: inline-block; }
+  .pitch-badge-yellow { background: #fbbf24; }
+  .pitch-badge-red { background: var(--red); }
+  .pitch-player-name {
+    font-size: 0.56rem; font-weight: 700; color: #fff; text-align: center;
+    text-shadow: 0 1px 3px rgba(0,0,0,.95); white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; width: 100%; line-height: 1.15;
+  }
+  .pitch-player-rating {
+    font-size: 0.54rem; font-weight: 800; padding: 0 3px; border-radius: 3px;
+    line-height: 1.3; white-space: nowrap;
+  }
   .xg-val { font-size: 0.8rem; font-weight: 700; color: var(--accent3); }
   .xg-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
   .xg-row-forecast { border-top: 1px dashed var(--border); }
@@ -357,6 +437,64 @@ const MATCHES = [
   { id:53, group:'C', home:'Schottland', away:'Brasilien', homeFlag:'🏴󠁧󠁢󠁳󠁣󠁴󠁿', awayFlag:'🇧🇷', homeScore:null, awayScore:null, status:'soon', bookProb:{win:14,draw:19,lose:67}, date:'25.06.', time:'00:00', venue:'Hard Rock Stadium, Miami Gardens', homeForm:['W','W','D','W','W'], awayForm:['W','W','D','W','W'] },
   { id:54, group:'C', home:'Marokko', away:'Haiti', homeFlag:'🇲🇦', awayFlag:'🇭🇹', homeScore:null, awayScore:null, status:'soon', bookProb:{win:75,draw:16,lose:9}, date:'25.06.', time:'00:00', venue:'Mercedes-Benz Stadium, Atlanta', homeForm:['W','D','W','W','D'], awayForm:['L','D','L','L','D'] },
 ];
+
+
+// ========== SPIELBERICHTE (Startelf, Bank, Karten, Tore/Assists, Noten) ==========
+// Key = MATCHES id. Nur für bereits recherchierte Spiele vorhanden - fehlt der Eintrag,
+// zeigt das Modal einen Hinweis statt falscher/erfundener Daten.
+// number: Trikotnummer (nur wo sicher recherchiert, sonst weggelassen)
+// rating: Sofascore-Note 0.0-10.0 (nur für eingesetzte Spieler: Start + eingewechselt)
+// sub: { in: Minute, out: Minute } bei Wechseln; card: 'yellow'|'red'|'yellow-red'
+// goals/assists: Anzahl in diesem Spiel
+const MATCH_LINEUPS = {
+  9: { // Deutschland 7:1 Curaçao - Quelle: Sofascore, Fotmob (Stand 14.06.2026)
+    homeFormation: '4-2-3-1',
+    awayFormation: '3-5-2',
+    home: {
+      startXI: [
+        { number:1, name:'Manuel Neuer', pos:'TW', rating:6.8 },
+        { number:6, name:'Joshua Kimmich', pos:'RV', rating:7.9, assists:2 },
+        { number:4, name:'Jonathan Tah', pos:'IV', rating:7.0 },
+        { number:23, name:'Nico Schlotterbeck', pos:'IV', rating:8.4, goals:1 },
+        { number:3, name:'Nathaniel Brown', pos:'LV', rating:7.2, sub:{out:73} },
+        { number:8, name:'Felix Nmecha', pos:'ZM', rating:8.6, assists:1, sub:{out:73} },
+        { number:21, name:'Aleksandar Pavlović', pos:'ZM', rating:7.1 },
+        { number:19, name:'Leroy Sané', pos:'LA', rating:6.9, sub:{out:46} },
+        { number:10, name:'Jamal Musiala', pos:'ZOM', rating:8.1, assists:1, sub:{out:64} },
+        { number:7, name:'Florian Wirtz', pos:'ROM', rating:7.5, assists:1, sub:{out:83} },
+        { number:9, name:'Kai Havertz', pos:'ST', rating:8.9, goals:2 },
+      ],
+      bench: [
+        { name:'Deniz Undav', pos:'ST', rating:8.9, goals:2, assists:1, sub:{in:46} },
+        { name:'Wilfried Anton', pos:'RV', sub:{in:83} },
+        { name:'Toni Rüdiger', pos:'IV', sub:{in:73} },
+        { name:'David Raum', pos:'LV', sub:{in:73} },
+        { name:'Leon Goretzka', pos:'ZM', sub:{in:73} },
+      ],
+      cards: [],
+    },
+    away: {
+      startXI: [
+        { name:'Eloy Room', pos:'TW', rating:6.0 },
+        { number:3, name:'Jurién Gaari', pos:'IV', rating:5.4 },
+        { number:18, name:'Armando Obispo', pos:'IV', rating:5.3 },
+        { number:23, name:'Riechedly Bazoer', pos:'IV', rating:5.6 },
+        { number:5, name:'Sherel Floranus', pos:'RM', rating:5.8, sub:{out:46} },
+        { number:10, name:'Leandro Bacuna', pos:'ZM', rating:5.5 },
+        { number:7, name:'Juninho Bacuna', pos:'ZM', rating:5.4 },
+        { number:8, name:'Livano Comenencia', pos:'LM', rating:6.9, goals:1 },
+        { number:21, name:'Tahith Chong', pos:'OM', rating:5.7, sub:{out:83} },
+        { number:9, name:'Jürgen Locadia', pos:'ST', rating:5.2, sub:{out:64} },
+      ],
+      bench: [
+        { name:'Sontje Hansen', pos:'RM', number:12, sub:{in:46} },
+        { name:'Jearl Margaritha', pos:'ST', number:16, sub:{in:64} },
+        { name:'Gervane Kastaneer', pos:'OM', number:19, sub:{in:83} },
+      ],
+      cards: [],
+    },
+  },
+};
 
 
 const GROUPS = {
@@ -660,6 +798,8 @@ function showMatchDetail(id) {
       </div>
     </div>` : '';
 
+  const lineupSection = isFinished ? renderLineupSection(m) : '';
+
   const box = document.getElementById('matchModalBox');
   box.innerHTML = `
     <button class="modal-close" onclick="closeMatchModal()">✕</button>
@@ -678,6 +818,7 @@ function showMatchDetail(id) {
     ${scorersLine}
     ${xgLine}
     ${probLine}
+    ${lineupSection}
   `;
   document.getElementById('matchModal').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -892,6 +1033,148 @@ function formatScorers(scorers) {
   if (!scorers || !scorers.length) return '';
   return scorers.map(g => `<div class="scorer-entry">⚽ ${g.name}${g.minute ? ` <span class="scorer-minute">${g.minute}'</span>` : ''}</div>`).join('');
 }
+
+// ========== SPIELBERICHT-RENDERING (Aufstellung, Bank, Karten, Noten) ==========
+function ratingClass(r) {
+  if (r == null) return 'rating-none';
+  if (r >= 8) return 'rating-great';
+  if (r >= 7) return 'rating-good';
+  if (r >= 6) return 'rating-ok';
+  return 'rating-poor';
+}
+
+function lastName(fullName) {
+  const parts = fullName.trim().split(' ');
+  return parts[parts.length - 1];
+}
+
+// Verteilt eine Formation (z.B. "4-2-3-1") auf y-Reihen für eine SVG-Spielfeldhälfte.
+// side: 'home' (unten, Linien Richtung Mitte nach oben) oder 'away' (oben, gespiegelt)
+function layoutFormation(formation, startXI, side, pitchWidth, halfHeight) {
+  const lines = formation.split('-').map(n => parseInt(n, 10)).filter(n => !isNaN(n));
+  const gk = startXI.find(p => p.pos === 'TW') || startXI[0];
+  const outfield = startXI.filter(p => p !== gk);
+
+  const rows = [];
+  let idx = 0;
+  lines.forEach(count => {
+    rows.push(outfield.slice(idx, idx + count));
+    idx += count;
+  });
+
+  const positions = [];
+  const totalLines = rows.length;
+  // Ränder proportional zur Feld-Halbhöhe (vorher px-Werte bei halfHeight=230, jetzt halfHeight=50)
+  const edgeMargin = halfHeight * 0.105;   // Abstand Torwart/Grundlinie
+  const innerMargin = halfHeight * 0.26;   // Abstand vorderste Reihe/Mittellinie
+  const gkY = side === 'home' ? halfHeight - edgeMargin : edgeMargin;
+  positions.push({ player: gk, x: pitchWidth / 2, y: gkY, isGk: true });
+
+  rows.forEach((row, li) => {
+    const rowProgress = (li + 1) / (totalLines + 1); // 0..1 von Grundlinie zur Mittellinie
+    const y = side === 'home'
+      ? halfHeight - edgeMargin - rowProgress * (halfHeight - edgeMargin - innerMargin)
+      : edgeMargin + rowProgress * (halfHeight - edgeMargin - innerMargin);
+    row.forEach((p, pi) => {
+      const x = (pi + 1) * (pitchWidth / (row.length + 1));
+      positions.push({ player: p, x, y, isGk: false });
+    });
+  });
+  return positions;
+}
+
+function renderPitchPlayer(pos) {
+  const p = pos.player;
+  const cls = ratingClass(p.rating);
+  const badges = [];
+  if (p.goals) badges.push(`<span class="pitch-badge pitch-badge-goal">⚽${p.goals > 1 ? p.goals : ''}</span>`);
+  if (p.assists) badges.push(`<span class="pitch-badge pitch-badge-assist">👟${p.assists > 1 ? p.assists : ''}</span>`);
+  if (p.card === 'yellow') badges.push(`<span class="pitch-badge pitch-badge-yellow"></span>`);
+  if (p.card === 'red') badges.push(`<span class="pitch-badge pitch-badge-red"></span>`);
+  if (p.card === 'yellow-red') badges.push(`<span class="pitch-badge pitch-badge-yellow"></span><span class="pitch-badge pitch-badge-red"></span>`);
+  return `
+    <div class="pitch-player" style="left:${pos.x}%; top:${pos.y}%;">
+      <div class="pitch-player-dot ${cls}">${p.number ?? ''}</div>
+      <div class="pitch-player-badges">${badges.join('')}</div>
+      <div class="pitch-player-name">${lastName(p.name)}</div>
+      ${p.rating != null ? `<div class="pitch-player-rating ${cls}">${p.rating.toFixed(1)}</div>` : ''}
+    </div>`;
+}
+
+function renderPitchView(lineup, homeTeamName, awayTeamName) {
+  // Koordinatensystem 0-100 (Prozent), damit das Feld per CSS responsive skalieren kann.
+  const PITCH_W = 100, HALF_H = 50, PITCH_H = 100;
+  const homePositions = layoutFormation(lineup.homeFormation, lineup.home.startXI, 'home', PITCH_W, HALF_H);
+  const awayPositions = layoutFormation(lineup.awayFormation, lineup.away.startXI, 'away', PITCH_W, HALF_H)
+    .map(pos => ({ ...pos, y: pos.y + HALF_H })); // in untere SVG-Hälfte spiegeln -> tatsächlich obere Spielfeldhälfte
+
+  const allPlayers = [...homePositions, ...awayPositions];
+
+  return `
+    <div class="pitch-wrap">
+      <div class="pitch-team-label pitch-team-label-away">${awayTeamName} <span class="lineup-formation">(${lineup.awayFormation})</span></div>
+      <div class="pitch-field">
+        <svg viewBox="0 0 320 460" class="pitch-svg-lines" preserveAspectRatio="none">
+          <rect x="1" y="1" width="318" height="458" rx="4" class="pitch-outline" />
+          <line x1="1" y1="230" x2="319" y2="230" class="pitch-line" />
+          <circle cx="160" cy="230" r="38" class="pitch-line-fill" />
+          <rect x="90" y="1" width="140" height="46" class="pitch-line-fill" />
+          <rect x="90" y="413" width="140" height="46" class="pitch-line-fill" />
+        </svg>
+        ${allPlayers.map(renderPitchPlayer).join('')}
+      </div>
+      <div class="pitch-team-label pitch-team-label-home">${homeTeamName} <span class="lineup-formation">(${lineup.homeFormation})</span></div>
+    </div>`;
+}
+
+function renderPlayerRow(p, isBench) {
+  const numHtml = p.number ? `<span class="player-number">${p.number}</span>` : '';
+  const ratingHtml = p.rating != null
+    ? `<span class="player-rating ${ratingClass(p.rating)}">${p.rating.toFixed(1)}</span>`
+    : '';
+  const goalsHtml = p.goals ? Array(p.goals).fill('⚽').join('') : '';
+  const assistsHtml = p.assists ? Array(p.assists).fill('🅰️').join('') : '';
+  const cardHtml = p.card === 'yellow' ? `<span class="card-icon card-yellow"></span>`
+    : p.card === 'red' ? `<span class="card-icon card-red"></span>`
+    : p.card === 'yellow-red' ? `<span class="card-icon card-yellow"></span><span class="card-icon card-red"></span>`
+    : '';
+  const subHtml = p.sub
+    ? (p.sub.in != null ? `<span class="sub-info sub-in">↑${p.sub.in}'</span>` : '')
+      + (p.sub.out != null ? `<span class="sub-info sub-out">↓${p.sub.out}'</span>` : '')
+    : '';
+  return `
+    <div class="player-row ${isBench ? 'player-row-bench' : ''}">
+      ${numHtml}
+      <span class="player-pos-tag">${p.pos || ''}</span>
+      <span class="player-fullname">${p.name}</span>
+      <span class="player-extras">${goalsHtml}${assistsHtml}${cardHtml}${subHtml}</span>
+      ${ratingHtml}
+    </div>`;
+}
+
+function renderLineupSection(m) {
+  const lineup = MATCH_LINEUPS[m.id];
+  if (!lineup) {
+    return `<div class="no-lineup-msg">📋 Für dieses Spiel liegt noch kein detaillierter Spielbericht vor.</div>`;
+  }
+  const renderBenchBlock = (teamData, teamName) => `
+    <div class="lineup-team-block">
+      <div class="lineup-team-title">${teamName}</div>
+      ${teamData.bench && teamData.bench.length ? teamData.bench.map(p => renderPlayerRow(p, true)).join('') : `<div class="no-lineup-msg" style="padding:10px">Keine Bankdaten verfügbar</div>`}
+    </div>`;
+
+  return `
+    <div class="lineup-report">
+      <div class="lineup-report-title">📋 Spielbericht – Aufstellungen</div>
+      ${renderPitchView(lineup, m.home, m.away)}
+      <div class="lineup-subtitle" style="text-align:center; margin-top:18px">🪑 Bank</div>
+      <div class="lineup-teams-grid">
+        ${renderBenchBlock(lineup.home, m.home)}
+        ${renderBenchBlock(lineup.away, m.away)}
+      </div>
+    </div>`;
+}
+
 
 function renderMatchCard(m) {
   const prob = calcProb(m, m);
