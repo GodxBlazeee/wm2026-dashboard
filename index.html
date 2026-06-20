@@ -30,6 +30,12 @@
   .logo { display: flex; align-items: center; gap: 12px; }
   .logo-icon { font-size: 2rem; }
   .logo h1 { font-size: 1.4rem; font-weight: 700; background: linear-gradient(90deg, #3b82f6, #10b981); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .by-credit {
+    font-size: 0.7rem; font-weight: 600; font-style: italic; letter-spacing: .03em;
+    background: linear-gradient(90deg, #f59e0b, #fbbf24);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-left: 8px; opacity: 0.9; vertical-align: middle;
+  }
   .logo p { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
   .live-badge { display: flex; align-items: center; gap: 6px; background: rgba(239,68,68,0.15); border: 1px solid var(--red); padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; color: var(--red); }
   .live-dot { width: 8px; height: 8px; background: var(--red); border-radius: 50%; animation: pulse 1.2s infinite; }
@@ -216,7 +222,7 @@
   <div class="logo">
     <div class="logo-icon">⚽</div>
     <div>
-      <h1>WM 2026 Analyser</h1>
+      <h1>WM 2026 Analyser <span class="by-credit">by Wechen</span></h1>
       <p>Kanada · Mexiko · USA</p>
     </div>
   </div>
