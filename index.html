@@ -1115,21 +1115,47 @@ async function refreshLiveData() {
   const statusEl = document.getElementById('liveStatusText');
   try {
     const data = await fetchWorldcupJson();
+
+    // Schritt 1: Live-Status für JEDES Spiel in unserem eigenen Spielplan berechnen -
+    // unabhängig davon, ob/wie die externe Quelle es liefert. Das ist die einzige Stelle,
+    // die wirklich "weiß", wie spät es gerade ist (über Date.now()).
+    MATCHES.forEach(local => {
+      if (local.status === 'done') return; // beendete Spiele nicht mehr anfassen
+      const kickoff = parseMatchKickoff(local);
+      if (!kickoff) return;
+      const minutesSinceKickoff = (Date.now() - kickoff.getTime()) / 60000;
+      if (minutesSinceKickoff >= 0 && minutesSinceKickoff <= 130) {
+        local.status = 'live';
+        local.minute = Math.min(90, Math.round(minutesSinceKickoff));
+      } else if (minutesSinceKickoff < 0 && local.status === 'live') {
+        local.status = 'soon'; // falls Uhrzeit/Datum sich geändert hat, zurücksetzen
+      }
+    });
+
     if (!data) {
-      if (statusEl) statusEl.textContent = '⚠️ Live-Update fehlgeschlagen (keine Quelle erreichbar).';
+      if (statusEl) statusEl.textContent = '⚠️ Ergebnis-Abgleich fehlgeschlagen (keine Quelle erreichbar) – Live-Status läuft trotzdem über die Anstoßzeit.';
+      const activeSection = document.querySelector('.section.active');
+      if (activeSection) {
+        const id = activeSection.id;
+        if (id === 'dashboard') renderDashboard();
+        if (id === 'matches') renderMatchesSection();
+        if (id === 'groups') renderGroupsSection();
+      }
       return;
     }
     const liveMatches = data.matches || [];
     let updated = 0;
+    let unmatched = 0;
 
+    // Schritt 2: Ergebnisse von der externen Quelle abgleichen, wo ein passendes Spiel
+    // gefunden wird. Setzt bei echtem Endergebnis den Status final auf 'done'.
     liveMatches.forEach(lm => {
       const homeDe = mapTeamNameToDe(lm.team1);
       const awayDe = mapTeamNameToDe(lm.team2);
       const local = MATCHES.find(m => m.home === homeDe && m.away === awayDe);
-      if (!local) return;
+      if (!local) { unmatched++; return; }
 
       const hasResult = lm.score && Array.isArray(lm.score.ft);
-
       if (hasResult) {
         local.homeScore = lm.score.ft[0];
         local.awayScore = lm.score.ft[1];
@@ -1145,25 +1171,7 @@ async function refreshLiveData() {
             local.estimatedXg = { home: forecast.home, away: forecast.away };
           }
         }
-      } else if (local.status !== 'done') {
-        // openfootball liefert kein Ergebnis -> noch kein Endstand bekannt. Anhand unseres
-        // eigenen Spielplans grob abschätzen, ob das Spiel laut Anstoßzeit gerade läuft
-        // (Anstoß vor 0-130 Minuten = wahrscheinlich live), damit der "Live"-Filter etwas zeigt.
-        const kickoff = parseMatchKickoff(local);
-        if (kickoff) {
-          const minutesSinceKickoff = (Date.now() - kickoff.getTime()) / 60000;
-          if (minutesSinceKickoff >= 0 && minutesSinceKickoff <= 130) {
-            local.status = 'live';
-            local.minute = Math.min(90, Math.round(minutesSinceKickoff));
-          } else if (minutesSinceKickoff > 130) {
-            // Anstoß ist länger her, aber openfootball hat noch kein Ergebnis nachgetragen
-            // (Pflege erfolgt dort nur ca. 1x täglich von Hand) - Status unverändert lassen,
-            // statt fälschlich "beendet" ohne Ergebnis zu zeigen.
-          }
-        }
       }
-      // openfootball unterscheidet nicht zwischen "läuft gerade" und "noch nicht gespielt" -
-      // ohne score bleibt der bisherige Status (z.B. 'soon') unangetastet.
     });
 
     // Aktuell sichtbare Sektion neu rendern, damit die Live-Daten sofort erscheinen
@@ -1176,7 +1184,7 @@ async function refreshLiveData() {
     }
     document.getElementById('updateTime').textContent =
       '⏱️ Live aktualisiert: ' + new Date().toLocaleTimeString('de-AT');
-    if (statusEl) statusEl.textContent = `🟢 Live-Update aktiv (openfootball, ${updated} Spiele abgeglichen). Quelle wird ca. 1x täglich gepflegt, keine Sekunden-Live-Minute.`;
+    if (statusEl) statusEl.textContent = `🟢 Live-Update aktiv (openfootball, ${updated} Ergebnisse abgeglichen${unmatched ? `, ${unmatched} Spiele ohne Namens-Treffer` : ''}). Live-Status wird unabhängig über die Anstoßzeit erkannt.`;
   } catch (err) {
     console.warn('Live-Update fehlgeschlagen:', err);
     if (statusEl) statusEl.textContent = '⚠️ Live-Update fehlgeschlagen (Netzwerk).';
