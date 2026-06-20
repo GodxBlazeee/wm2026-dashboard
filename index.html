@@ -329,10 +329,10 @@ const MATCHES = [
   { id:26, group:'A', home:'Mexiko', away:'Südkorea', homeFlag:'🇲🇽', awayFlag:'🇰🇷', homeScore:1, awayScore:0, status:'done', xgHome:0.48, xgAway:0.69, date:'19.06.', time:'03:00', venue:'Estadio AKRON, Zapopan', homeForm:['W','W','W','D','W'], awayForm:['W','W','D','W','L'] },
   { id:27, group:'B', home:'Schweiz', away:'Bosnien', homeFlag:'🇨🇭', awayFlag:'🇧🇦', homeScore:4, awayScore:1, status:'done', xgHome:2.06, xgAway:0.23, date:'18.06.', time:'21:00', venue:'SoFi Stadium', homeForm:['W','W','W','D','W'], awayForm:['W','L','D','L','W'] },
   { id:28, group:'B', home:'Kanada', away:'Katar', homeFlag:'🇨🇦', awayFlag:'🇶🇦', homeScore:3, awayScore:0, status:'done', xgHome:4.75, xgAway:0.18, date:'19.06.', time:'00:00', venue:'BC Place, Vancouver', homeForm:['W','W','D','W','W'], awayForm:['L','L','D','L','L'] },
-  { id:29, group:'C', home:'Schottland', away:'Marokko', homeFlag:'🏴󠁧󠁢󠁳󠁣󠁴󠁿', awayFlag:'🇲🇦', homeScore:null, awayScore:null, status:'soon', bookProb:{win:18,draw:27,lose:56}, date:'20.06.', time:'00:00', venue:'Gillette Stadium, Boston', homeForm:['W','W','D','W','W'], awayForm:['W','D','W','W','D'] },
-  { id:30, group:'C', home:'Brasilien', away:'Haiti', homeFlag:'🇧🇷', awayFlag:'🇭🇹', homeScore:null, awayScore:null, status:'soon', bookProb:{win:87,draw:9,lose:4}, date:'20.06.', time:'02:30', venue:'Lincoln Financial Field, Philadelphia', homeForm:['W','W','D','W','W'], awayForm:['L','D','L','L','D'] },
+  { id:29, group:'C', home:'Schottland', away:'Marokko', homeFlag:'🏴󠁧󠁢󠁳󠁣󠁴󠁿', awayFlag:'🇲🇦', homeScore:0, awayScore:1, status:'done', xgHome:0.54, xgAway:0.97, date:'20.06.', time:'00:00', venue:'Gillette Stadium, Boston', homeForm:['W','W','D','W','W'], awayForm:['W','D','W','W','D'] },
+  { id:30, group:'C', home:'Brasilien', away:'Haiti', homeFlag:'🇧🇷', awayFlag:'🇭🇹', homeScore:3, awayScore:0, status:'done', xgHome:1.5, xgAway:0.23, date:'20.06.', time:'02:30', venue:'Lincoln Financial Field, Philadelphia', homeForm:['W','W','D','W','W'], awayForm:['L','D','L','L','D'] },
   { id:31, group:'D', home:'USA', away:'Australien', homeFlag:'🇺🇸', awayFlag:'🇦🇺', homeScore:2, awayScore:0, status:'done', xgHome:1.30, xgAway:0.32, date:'19.06.', time:'21:00', venue:'Lumen Field, Seattle', homeForm:['W','W','W','D','W'], awayForm:['W','D','W','W','L'] },
-  { id:32, group:'D', home:'Türkei', away:'Paraguay', homeFlag:'🇹🇷', awayFlag:'🇵🇾', homeScore:null, awayScore:null, status:'soon', bookProb:{win:47,draw:28,lose:25}, date:'20.06.', time:'05:00', venue:'Levi\'s Stadium, Santa Clara', homeForm:['W','W','D','W','L'], awayForm:['D','L','W','L','D'] },
+  { id:32, group:'D', home:'Türkei', away:'Paraguay', homeFlag:'🇹🇷', awayFlag:'🇵🇾', homeScore:0, awayScore:1, status:'done', xgHome:2.10, xgAway:0.32, date:'20.06.', time:'05:00', venue:'Levi\'s Stadium, Santa Clara', homeForm:['W','W','D','W','L'], awayForm:['D','L','W','L','D'] },
   { id:33, group:'E', home:'Deutschland', away:'Elfenbeinküste', homeFlag:'🇩🇪', awayFlag:'🇨🇮', homeScore:null, awayScore:null, status:'soon', bookProb:{win:63,draw:21,lose:16}, date:'20.06.', time:'22:00', venue:'BMO Field, Toronto', homeForm:['W','W','W','W','D'], awayForm:['W','D','W','W','L'] },
   { id:34, group:'E', home:'Ecuador', away:'Curaçao', homeFlag:'🇪🇨', awayFlag:'🇨🇼', homeScore:null, awayScore:null, status:'soon', bookProb:{win:87,draw:9,lose:4}, date:'21.06.', time:'02:00', venue:'Arrowhead Stadium, Kansas City', homeForm:['W','D','D','W','L'], awayForm:['L','L','D','L','L'] },
   { id:35, group:'F', home:'Niederlande', away:'Schweden', homeFlag:'🇳🇱', awayFlag:'🇸🇪', homeScore:null, awayScore:null, status:'soon', bookProb:{win:55,draw:25,lose:20}, date:'20.06.', time:'19:00', venue:'NRG Stadium, Houston', homeForm:['W','W','D','W','W'], awayForm:['W','W','W','D','W'] },
@@ -361,76 +361,76 @@ const MATCHES = [
 
 const GROUPS = {
   A: { teams:[
-    { name:'Mexiko', flag:'🇲🇽', played:2, w:2, d:0, l:0, gf:3, ga:0, pts:6 },
-    { name:'Südkorea', flag:'🇰🇷', played:2, w:1, d:0, l:1, gf:2, ga:2, pts:3 },
-    { name:'Tschechien', flag:'🇨🇿', played:2, w:0, d:1, l:1, gf:2, ga:3, pts:1 },
-    { name:'Südafrika', flag:'🇿🇦', played:2, w:0, d:1, l:1, gf:1, ga:3, pts:1 },
+    { name:'Mexiko', flag:'🇲🇽' },
+    { name:'Südkorea', flag:'🇰🇷' },
+    { name:'Tschechien', flag:'🇨🇿' },
+    { name:'Südafrika', flag:'🇿🇦' },
   ]},
   B: { teams:[
-    { name:'Schweiz', flag:'🇨🇭', played:2, w:1, d:1, l:0, gf:5, ga:2, pts:4 },
-    { name:'Kanada', flag:'🇨🇦', played:2, w:1, d:1, l:0, gf:4, ga:1, pts:4 },
-    { name:'Bosnien', flag:'🇧🇦', played:2, w:0, d:1, l:1, gf:2, ga:5, pts:1 },
-    { name:'Katar', flag:'🇶🇦', played:2, w:0, d:1, l:1, gf:1, ga:4, pts:1 },
+    { name:'Schweiz', flag:'🇨🇭' },
+    { name:'Kanada', flag:'🇨🇦' },
+    { name:'Bosnien', flag:'🇧🇦' },
+    { name:'Katar', flag:'🇶🇦' },
   ]},
   C: { teams:[
-    { name:'Schottland', flag:'🏴󠁧󠁢󠁳󠁣󠁴󠁿', played:1, w:1, d:0, l:0, gf:1, ga:0, pts:3 },
-    { name:'Brasilien', flag:'🇧🇷', played:1, w:0, d:1, l:0, gf:1, ga:1, pts:1 },
-    { name:'Marokko', flag:'🇲🇦', played:1, w:0, d:1, l:0, gf:1, ga:1, pts:1 },
-    { name:'Haiti', flag:'🇭🇹', played:1, w:0, d:0, l:1, gf:0, ga:1, pts:0 },
+    { name:'Schottland', flag:'🏴󠁧󠁢󠁳󠁣󠁴󠁿' },
+    { name:'Brasilien', flag:'🇧🇷' },
+    { name:'Marokko', flag:'🇲🇦' },
+    { name:'Haiti', flag:'🇭🇹' },
   ]},
   D: { teams:[
-    { name:'USA', flag:'🇺🇸', played:2, w:2, d:0, l:0, gf:6, ga:1, pts:6 },
-    { name:'Australien', flag:'🇦🇺', played:2, w:1, d:0, l:1, gf:2, ga:2, pts:3 },
-    { name:'Türkei', flag:'🇹🇷', played:1, w:0, d:0, l:1, gf:0, ga:2, pts:0 },
-    { name:'Paraguay', flag:'🇵🇾', played:1, w:0, d:0, l:1, gf:1, ga:4, pts:0 },
+    { name:'USA', flag:'🇺🇸' },
+    { name:'Australien', flag:'🇦🇺' },
+    { name:'Türkei', flag:'🇹🇷' },
+    { name:'Paraguay', flag:'🇵🇾' },
   ]},
   E: { teams:[
-    { name:'Deutschland', flag:'🇩🇪', played:1, w:1, d:0, l:0, gf:7, ga:1, pts:3 },
-    { name:'Elfenbeinküste', flag:'🇨🇮', played:1, w:1, d:0, l:0, gf:1, ga:0, pts:3 },
-    { name:'Ecuador', flag:'🇪🇨', played:1, w:0, d:0, l:1, gf:0, ga:1, pts:0 },
-    { name:'Curaçao', flag:'🇨🇼', played:1, w:0, d:0, l:1, gf:1, ga:7, pts:0 },
+    { name:'Deutschland', flag:'🇩🇪' },
+    { name:'Elfenbeinküste', flag:'🇨🇮' },
+    { name:'Ecuador', flag:'🇪🇨' },
+    { name:'Curaçao', flag:'🇨🇼' },
   ]},
   F: { teams:[
-    { name:'Schweden', flag:'🇸🇪', played:1, w:1, d:0, l:0, gf:5, ga:1, pts:3 },
-    { name:'Niederlande', flag:'🇳🇱', played:1, w:0, d:1, l:0, gf:2, ga:2, pts:1 },
-    { name:'Japan', flag:'🇯🇵', played:1, w:0, d:1, l:0, gf:2, ga:2, pts:1 },
-    { name:'Tunesien', flag:'🇹🇳', played:1, w:0, d:0, l:1, gf:1, ga:5, pts:0 },
+    { name:'Schweden', flag:'🇸🇪' },
+    { name:'Niederlande', flag:'🇳🇱' },
+    { name:'Japan', flag:'🇯🇵' },
+    { name:'Tunesien', flag:'🇹🇳' },
   ]},
   G: { teams:[
-    { name:'Iran', flag:'🇮🇷', played:1, w:0, d:1, l:0, gf:2, ga:2, pts:1 },
-    { name:'Neuseeland', flag:'🇳🇿', played:1, w:0, d:1, l:0, gf:2, ga:2, pts:1 },
-    { name:'Ägypten', flag:'🇪🇬', played:1, w:0, d:1, l:0, gf:1, ga:1, pts:1 },
-    { name:'Belgien', flag:'🇧🇪', played:1, w:0, d:1, l:0, gf:1, ga:1, pts:1 },
+    { name:'Iran', flag:'🇮🇷' },
+    { name:'Neuseeland', flag:'🇳🇿' },
+    { name:'Ägypten', flag:'🇪🇬' },
+    { name:'Belgien', flag:'🇧🇪' },
   ]},
   H: { teams:[
-    { name:'Uruguay', flag:'🇺🇾', played:1, w:0, d:1, l:0, gf:1, ga:1, pts:1 },
-    { name:'Saudi-Arabien', flag:'🇸🇦', played:1, w:0, d:1, l:0, gf:1, ga:1, pts:1 },
-    { name:'Spanien', flag:'🇪🇸', played:1, w:0, d:1, l:0, gf:0, ga:0, pts:1 },
-    { name:'Kap Verde', flag:'🇨🇻', played:1, w:0, d:1, l:0, gf:0, ga:0, pts:1 },
+    { name:'Uruguay', flag:'🇺🇾' },
+    { name:'Saudi-Arabien', flag:'🇸🇦' },
+    { name:'Spanien', flag:'🇪🇸' },
+    { name:'Kap Verde', flag:'🇨🇻' },
   ]},
   I: { teams:[
-    { name:'Norwegen', flag:'🇳🇴', played:1, w:1, d:0, l:0, gf:4, ga:1, pts:3 },
-    { name:'Frankreich', flag:'🇫🇷', played:1, w:1, d:0, l:0, gf:3, ga:1, pts:3 },
-    { name:'Senegal', flag:'🇸🇳', played:1, w:0, d:0, l:1, gf:1, ga:3, pts:0 },
-    { name:'Irak', flag:'🇮🇶', played:1, w:0, d:0, l:1, gf:1, ga:4, pts:0 },
+    { name:'Norwegen', flag:'🇳🇴' },
+    { name:'Frankreich', flag:'🇫🇷' },
+    { name:'Senegal', flag:'🇸🇳' },
+    { name:'Irak', flag:'🇮🇶' },
   ]},
   J: { teams:[
-    { name:'Argentinien', flag:'🇦🇷', played:1, w:1, d:0, l:0, gf:3, ga:0, pts:3 },
-    { name:'Österreich', flag:'🇦🇹', played:1, w:1, d:0, l:0, gf:3, ga:1, pts:3 },
-    { name:'Jordanien', flag:'🇯🇴', played:1, w:0, d:0, l:1, gf:1, ga:3, pts:0 },
-    { name:'Algerien', flag:'🇩🇿', played:1, w:0, d:0, l:1, gf:0, ga:3, pts:0 },
+    { name:'Argentinien', flag:'🇦🇷' },
+    { name:'Österreich', flag:'🇦🇹' },
+    { name:'Jordanien', flag:'🇯🇴' },
+    { name:'Algerien', flag:'🇩🇿' },
   ]},
   K: { teams:[
-    { name:'Kolumbien', flag:'🇨🇴', played:1, w:1, d:0, l:0, gf:3, ga:1, pts:3 },
-    { name:'Portugal', flag:'🇵🇹', played:1, w:0, d:1, l:0, gf:1, ga:1, pts:1 },
-    { name:'DR Kongo', flag:'🇨🇩', played:1, w:0, d:1, l:0, gf:1, ga:1, pts:1 },
-    { name:'Usbekistan', flag:'🇺🇿', played:1, w:0, d:0, l:1, gf:1, ga:3, pts:0 },
+    { name:'Kolumbien', flag:'🇨🇴' },
+    { name:'Portugal', flag:'🇵🇹' },
+    { name:'DR Kongo', flag:'🇨🇩' },
+    { name:'Usbekistan', flag:'🇺🇿' },
   ]},
   L: { teams:[
-    { name:'England', flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿', played:1, w:1, d:0, l:0, gf:4, ga:2, pts:3 },
-    { name:'Ghana', flag:'🇬🇭', played:1, w:1, d:0, l:0, gf:1, ga:0, pts:3 },
-    { name:'Panama', flag:'🇵🇦', played:1, w:0, d:0, l:1, gf:0, ga:1, pts:0 },
-    { name:'Kroatien', flag:'🇭🇷', played:1, w:0, d:0, l:1, gf:2, ga:4, pts:0 },
+    { name:'England', flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
+    { name:'Ghana', flag:'🇬🇭' },
+    { name:'Panama', flag:'🇵🇦' },
+    { name:'Kroatien', flag:'🇭🇷' },
   ]},
 };
 
@@ -897,6 +897,7 @@ function renderMatchCard(m) {
   const prob = calcProb(m, m);
   const isLive = m.status === 'live';
   const isDone = m.status === 'done';
+  const isAwaiting = m.status === 'awaiting_result';
   const hasKnownScore = m.homeScore != null && m.awayScore != null;
   const homeDisplayScore = isDone ? m.homeScore : (isLive && hasKnownScore ? m.homeScore : '');
   const awayDisplayScore = isDone ? m.awayScore : (isLive && hasKnownScore ? m.awayScore : '');
@@ -906,12 +907,15 @@ function renderMatchCard(m) {
       ? (hasKnownScore
           ? `<div class="score">${homeDisplayScore} – ${awayDisplayScore}</div>`
           : `<div class="score-vs">Spielstand folgt</div>`)
-      : `<div class="score-vs">vs</div>`;
+      : isAwaiting
+        ? `<div class="score-vs">Ergebnis folgt</div>`
+        : `<div class="score-vs">vs</div>`;
   const statusHTML = isLive
     ? `<span class="match-status-live">● LIVE</span>`
     : isDone ? `<span class="match-status-done">✓ FT</span>`
+    : isAwaiting ? `<span class="match-status-soon">⏳ Ergebnis ausstehend</span>`
     : `<span class="match-status-soon">🕐 ${m.time}</span>`;
-  const xgForecast = !isDone ? calcXgForecast(m) : null;
+  const xgForecast = (!isDone && !isAwaiting) ? calcXgForecast(m) : null;
 
   return `
   <div class="match-card" onclick="showMatchDetail(${m.id})">
@@ -949,13 +953,17 @@ function renderMatchCard(m) {
       <span class="xg-label">xG berechnet ⚡ (kein recherchierter Wert)</span>
       <span class="xg-val xg-val-forecast">${m.estimatedXg.away.toFixed(2)} xG</span>
     </div>` : ''}
-    ${!isDone && xgForecast ? `
+    ${!isDone && !isAwaiting && xgForecast ? `
     <div class="xg-row xg-row-forecast">
       <span class="xg-val xg-val-forecast">${xgForecast.home.toFixed(2)} xG</span>
       <span class="xg-label">xG-Prognose ⚡</span>
       <span class="xg-val xg-val-forecast">${xgForecast.away.toFixed(2)} xG</span>
     </div>` : ''}
-    ${!isDone ? `
+    ${isAwaiting ? `
+    <div class="xg-row">
+      <span class="xg-label">⏳ Spiel wurde angepfiffen, offizielles Ergebnis liegt noch nicht vor</span>
+    </div>` : ''}
+    ${!isDone && !isAwaiting ? `
     <div class="prob-bar">
       <div class="prob-row"><span class="prob-label">${m.home}</span><div class="prob-track"><div class="prob-fill prob-fill-win" style="width:${prob.win}%"></div></div><span class="prob-pct">${prob.win}%</span></div>
       <div class="prob-row"><span class="prob-label">Unent.</span><div class="prob-track"><div class="prob-fill prob-fill-draw" style="width:${prob.draw}%"></div></div><span class="prob-pct">${prob.draw}%</span></div>
@@ -965,9 +973,35 @@ function renderMatchCard(m) {
   </div>`;
 }
 
-function renderGroupTable(groupKey) {
+// Berechnet die Gruppentabelle live aus den tatsächlichen MATCHES-Ergebnissen,
+// statt sie fest einzutragen. Läuft bei jedem Rendern neu, bleibt also automatisch aktuell.
+function computeGroupStandings(groupKey) {
   const g = GROUPS[groupKey];
-  const sorted = [...g.teams].sort((a,b) => {
+  const stats = {};
+  g.teams.forEach(t => {
+    stats[t.name] = { name: t.name, flag: t.flag, played: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, pts: 0 };
+  });
+
+  MATCHES
+    .filter(m => m.group === groupKey && m.status === 'done')
+    .forEach(m => {
+      const home = stats[m.home];
+      const away = stats[m.away];
+      if (!home || !away) return; // Spiel betrifft ein Team außerhalb dieser Gruppen-Definition
+      home.played++; away.played++;
+      home.gf += m.homeScore; home.ga += m.awayScore;
+      away.gf += m.awayScore; away.ga += m.homeScore;
+      if (m.homeScore > m.awayScore) { home.w++; home.pts += 3; away.l++; }
+      else if (m.homeScore < m.awayScore) { away.w++; away.pts += 3; home.l++; }
+      else { home.d++; away.d++; home.pts += 1; away.pts += 1; }
+    });
+
+  return Object.values(stats);
+}
+
+function renderGroupTable(groupKey) {
+  const teams = computeGroupStandings(groupKey);
+  const sorted = [...teams].sort((a,b) => {
     if (b.pts !== a.pts) return b.pts - a.pts;
     const aDiff = a.gf - a.ga, bDiff = b.gf - b.ga;
     return bDiff - aDiff;
@@ -1177,8 +1211,13 @@ async function refreshLiveData() {
       if (minutesSinceKickoff >= 0 && minutesSinceKickoff <= 130) {
         local.status = 'live';
         local.minute = Math.min(90, Math.round(minutesSinceKickoff));
-      } else if (minutesSinceKickoff < 0 && local.status === 'live') {
-        local.status = 'soon'; // falls Uhrzeit/Datum sich geändert hat, zurücksetzen
+      } else if (minutesSinceKickoff < 0) {
+        if (local.status === 'live') local.status = 'soon'; // Uhrzeit/Datum geändert -> zurücksetzen
+      } else if (minutesSinceKickoff > 130) {
+        // Anstoß war vor mehr als 130 Minuten, aber kein Endergebnis bekannt (Quelle noch
+        // nicht aktualisiert). Nicht für immer auf 'live' hängen lassen - stattdessen als
+        // "wartet auf offizielles Ergebnis" markieren, damit es nicht ewig live wirkt.
+        if (local.status === 'live') local.status = 'awaiting_result';
       }
     });
 
