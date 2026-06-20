@@ -228,7 +228,7 @@
 <!-- ===== DASHBOARD ===== -->
 <div id="dashboard" class="section active">
   <div class="update-time" id="updateTime"></div>
-  <div class="tip-box" id="liveStatusBox">📡 Daten Stand: 19. Juni 2026 – Spieltag 2 läuft. Spielplan & Ergebnisse abgeglichen mit Flashscore, Sofascore, LiveScore & kicker.de. Spiel-Quoten basieren auf entvigten Buchmacher-Quoten (oddschecker), WM-Sieg-Quoten auf Sofascore Power Rankings. <strong id="liveStatusText">🔌 Live-Update: kein API-Token hinterlegt.</strong></div>
+  <div class="tip-box" id="liveStatusBox">📡 Daten Stand: 19. Juni 2026 – Spieltag 2 läuft. Spielplan & Ergebnisse abgeglichen mit Flashscore, Sofascore, LiveScore & kicker.de. Spiel-Quoten basieren auf entvigten Buchmacher-Quoten (oddschecker), WM-Sieg-Quoten auf Sofascore Power Rankings. <strong id="liveStatusText">🔄 Live-Update wird geladen…</strong></div>
 
   <div class="section-title">🔴 Heutige Spiele</div>
   <div id="todayMatches" class="grid-2"></div>
@@ -1041,21 +1041,19 @@ function filterMatches(type, btn) {
   renderMatchesSection(type);
 }
 
-// ========== LIVE-DATEN (football-data.org) ==========
-// 1) Account anlegen: https://www.football-data.org/client/register (kostenlos, 2 Minuten)
-// 2) Den per E-Mail erhaltenen API-Token unten eintragen.
-// 3) Ohne Token bleibt alles wie bisher beim zuletzt eingetragenen Stand (kein Fehler, kein Absturz).
-const FOOTBALL_DATA_API_TOKEN = '54dad233f33844a7988a23bbd8b0cd34';
+// ========== LIVE-DATEN (openfootball/worldcup.json, über GitHub) ==========
+// Kein API-Key nötig, keine CORS-Probleme (raw.githubusercontent.com erlaubt Browser-Zugriff).
+// Wichtig zu wissen: Diese Quelle wird von Hand gepflegt, i.d.R. einmal täglich aktualisiert -
+// keine sekundengenaue Live-Minute, aber zuverlässige Ergebnis-Updates ohne eigenen Server.
+const WORLDCUP_JSON_URL = 'https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json';
+const LIVE_REFRESH_MS = 5 * 60 * 1000; // alle 5 Minuten reicht, da die Quelle selbst nicht öfter aktualisiert wird
 
-// Free-Tier-Limit: 10 Anfragen/Minute. Ein Abruf pro Aktualisierung reicht (liefert alle WM-Spiele auf einmal).
-const LIVE_REFRESH_MS = 90000; // alle 90 Sekunden aktualisieren, um das Limit nicht auszureizen
-
-// Team-Namen-Mapping: football-data.org liefert englische Namen, unsere Daten sind auf Deutsch.
+// Team-Namen-Mapping: openfootball liefert englische Namen, unsere Daten sind auf Deutsch.
 const TEAM_NAME_EN_TO_DE = {
   'Mexico':'Mexiko','South Africa':'Südafrika','South Korea':'Südkorea','Korea Republic':'Südkorea',
   'Czech Republic':'Tschechien','Czechia':'Tschechien','Canada':'Kanada','Bosnia and Herzegovina':'Bosnien',
   'Switzerland':'Schweiz','Qatar':'Katar','Brazil':'Brasilien','Morocco':'Marokko','Haiti':'Haiti',
-  'Scotland':'Schottland','United States':'USA','Paraguay':'Paraguay','Australia':'Australien',
+  'Scotland':'Schottland','United States':'USA','USA':'USA','Paraguay':'Paraguay','Australia':'Australien',
   'Turkey':'Türkei','Türkiye':'Türkei','Germany':'Deutschland','Curacao':'Curaçao','Curaçao':'Curaçao',
   'Ivory Coast':'Elfenbeinküste',"Côte d'Ivoire":'Elfenbeinküste','Ecuador':'Ecuador','Netherlands':'Niederlande',
   'Japan':'Japan','Sweden':'Schweden','Tunisia':'Tunesien','Belgium':'Belgien','Egypt':'Ägypten',
@@ -1071,45 +1069,35 @@ function mapTeamNameToDe(enName) {
   return TEAM_NAME_EN_TO_DE[enName] || enName;
 }
 
-// Holt alle Spiele der WM 2026 (Wettbewerb "WC") und überschreibt Status/Ergebnis/Live-Minute
+// Holt den aktuellen WM-2026-Spielplan/-stand von openfootball und überschreibt Status/Ergebnis
 // in unserem MATCHES-Array, sofern ein passendes Spiel (gleiche Teams) gefunden wird.
 async function refreshLiveData() {
   const statusEl = document.getElementById('liveStatusText');
-  if (!FOOTBALL_DATA_API_TOKEN || FOOTBALL_DATA_API_TOKEN === 'HIER_DEINEN_TOKEN_EINTRAGEN') {
-    if (statusEl) statusEl.textContent = '🔌 Live-Update: kein API-Token hinterlegt.';
-    return; // kein Token hinterlegt -> Daten bleiben wie zuletzt manuell eingetragen
-  }
   try {
-    const res = await fetch('https://api.football-data.org/v4/competitions/WC/matches', {
-      headers: { 'X-Auth-Token': FOOTBALL_DATA_API_TOKEN }
-    });
+    const res = await fetch(WORLDCUP_JSON_URL, { cache: 'no-store' });
     if (!res.ok) {
-      console.warn('football-data.org Anfrage fehlgeschlagen:', res.status);
+      console.warn('openfootball Anfrage fehlgeschlagen:', res.status);
       if (statusEl) statusEl.textContent = `⚠️ Live-Update fehlgeschlagen (HTTP ${res.status}).`;
       return;
     }
     const data = await res.json();
     const liveMatches = data.matches || [];
+    let updated = 0;
 
     liveMatches.forEach(lm => {
-      const homeDe = mapTeamNameToDe(lm.homeTeam.name);
-      const awayDe = mapTeamNameToDe(lm.awayTeam.name);
+      const homeDe = mapTeamNameToDe(lm.team1);
+      const awayDe = mapTeamNameToDe(lm.team2);
       const local = MATCHES.find(m => m.home === homeDe && m.away === awayDe);
       if (!local) return;
 
-      // Status-Mapping football-data.org -> unser Schema
-      if (lm.status === 'IN_PLAY' || lm.status === 'PAUSED') {
-        local.status = 'live';
-        local.minute = lm.minute ?? local.minute;
-      } else if (lm.status === 'FINISHED') {
+      if (lm.score && Array.isArray(lm.score.ft)) {
+        local.homeScore = lm.score.ft[0];
+        local.awayScore = lm.score.ft[1];
         local.status = 'done';
-      } else if (lm.status === 'SCHEDULED' || lm.status === 'TIMED') {
-        local.status = 'soon';
+        updated++;
       }
-      if (lm.score && lm.score.fullTime) {
-        if (lm.score.fullTime.home != null) local.homeScore = lm.score.fullTime.home;
-        if (lm.score.fullTime.away != null) local.awayScore = lm.score.fullTime.away;
-      }
+      // openfootball unterscheidet nicht zwischen "läuft gerade" und "noch nicht gespielt" -
+      // ohne score bleibt der bisherige Status (z.B. 'soon') unangetastet.
     });
 
     // Aktuell sichtbare Sektion neu rendern, damit die Live-Daten sofort erscheinen
@@ -1122,10 +1110,10 @@ async function refreshLiveData() {
     }
     document.getElementById('updateTime').textContent =
       '⏱️ Live aktualisiert: ' + new Date().toLocaleTimeString('de-AT');
-    if (statusEl) statusEl.textContent = '🟢 Live-Update aktiv (football-data.org).';
+    if (statusEl) statusEl.textContent = `🟢 Live-Update aktiv (openfootball, ${updated} Spiele abgeglichen). Quelle wird ca. 1x täglich gepflegt, keine Sekunden-Live-Minute.`;
   } catch (err) {
     console.warn('Live-Update fehlgeschlagen:', err);
-    if (statusEl) statusEl.textContent = '⚠️ Live-Update fehlgeschlagen (Netzwerk/CORS).';
+    if (statusEl) statusEl.textContent = '⚠️ Live-Update fehlgeschlagen (Netzwerk).';
   }
 }
 
