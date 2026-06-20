@@ -607,15 +607,23 @@ function showMatchDetail(id) {
          <span class="xg-label">Expected Goals (Quelle: RealGM xG Tracker)</span>
          <span class="xg-val">${m.xgAway.toFixed(2)} xG</span>
        </div>`
-    : (() => {
-        const f = !isDone ? calcXgForecast(m) : null;
-        if (!f) return '';
-        return `<div class="modal-xg-line xg-row-forecast">
-           <span class="xg-val xg-val-forecast">${f.home.toFixed(2)} xG</span>
-           <span class="xg-label">xG-Prognose ⚡ – kalibriert auf entvigte Quoten mehrerer Buchmacher (oddschecker), sonst eigenes Stärke-Modell</span>
-           <span class="xg-val xg-val-forecast">${f.away.toFixed(2)} xG</span>
-         </div>`;
-      })();
+    : (isDone && m.estimatedXg
+        ? `<div class="modal-xg-line xg-row-forecast">
+             <span class="xg-val xg-val-forecast">${m.estimatedXg.home.toFixed(2)} xG</span>
+             <span class="xg-label">xG berechnet ⚡ – kein recherchierter Wert verfügbar, automatisch aus unserem Stärke-Modell geschätzt</span>
+             <span class="xg-val xg-val-forecast">${m.estimatedXg.away.toFixed(2)} xG</span>
+           </div>`
+        : (isDone
+            ? `<div class="modal-xg-line"><span class="xg-label">ℹ️ Für dieses Spiel liegt noch kein xG-Wert vor.</span></div>`
+            : (() => {
+                const f = calcXgForecast(m);
+                if (!f) return '';
+                return `<div class="modal-xg-line xg-row-forecast">
+                   <span class="xg-val xg-val-forecast">${f.home.toFixed(2)} xG</span>
+                   <span class="xg-label">xG-Prognose ⚡ – kalibriert auf entvigte Quoten mehrerer Buchmacher (oddschecker), sonst eigenes Stärke-Modell</span>
+                   <span class="xg-val xg-val-forecast">${f.away.toFixed(2)} xG</span>
+                 </div>`;
+              })()));
 
   const prob = !isDone ? calcProb(m, m) : null;
   const probLine = prob ? `
@@ -892,6 +900,12 @@ function renderMatchCard(m) {
       <span class="xg-label">Expected Goals</span>
       <span class="xg-val">${m.xgAway.toFixed(2)} xG</span>
     </div>` : ''}
+    ${isDone && m.xgHome == null && m.estimatedXg ? `
+    <div class="xg-row xg-row-forecast">
+      <span class="xg-val xg-val-forecast">${m.estimatedXg.home.toFixed(2)} xG</span>
+      <span class="xg-label">xG berechnet ⚡ (kein recherchierter Wert)</span>
+      <span class="xg-val xg-val-forecast">${m.estimatedXg.away.toFixed(2)} xG</span>
+    </div>` : ''}
     ${!isDone && xgForecast ? `
     <div class="xg-row xg-row-forecast">
       <span class="xg-val xg-val-forecast">${xgForecast.home.toFixed(2)} xG</span>
@@ -1045,7 +1059,8 @@ function filterMatches(type, btn) {
 // Kein API-Key nötig, keine CORS-Probleme (raw.githubusercontent.com erlaubt Browser-Zugriff).
 // Wichtig zu wissen: Diese Quelle wird von Hand gepflegt, i.d.R. einmal täglich aktualisiert -
 // keine sekundengenaue Live-Minute, aber zuverlässige Ergebnis-Updates ohne eigenen Server.
-const WORLDCUP_JSON_URL = 'https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json';
+const WORLDCUP_JSON_URL_PRIMARY = 'https://cdn.jsdelivr.net/gh/openfootball/worldcup.json@master/2026/worldcup.json';
+const WORLDCUP_JSON_URL_FALLBACK = 'https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json';
 const LIVE_REFRESH_MS = 5 * 60 * 1000; // alle 5 Minuten reicht, da die Quelle selbst nicht öfter aktualisiert wird
 
 // Team-Namen-Mapping: openfootball liefert englische Namen, unsere Daten sind auf Deutsch.
@@ -1071,16 +1086,28 @@ function mapTeamNameToDe(enName) {
 
 // Holt den aktuellen WM-2026-Spielplan/-stand von openfootball und überschreibt Status/Ergebnis
 // in unserem MATCHES-Array, sofern ein passendes Spiel (gleiche Teams) gefunden wird.
+// Versucht zuerst jsDelivr (zuverlässiges CORS), bei Fehlschlag raw.githubusercontent.com als Fallback.
+async function fetchWorldcupJson() {
+  for (const url of [WORLDCUP_JSON_URL_PRIMARY, WORLDCUP_JSON_URL_FALLBACK]) {
+    try {
+      const res = await fetch(url);
+      if (res.ok) return await res.json();
+      console.warn('Quelle antwortete mit Fehler:', url, res.status);
+    } catch (err) {
+      console.warn('Quelle nicht erreichbar:', url, err);
+    }
+  }
+  return null;
+}
+
 async function refreshLiveData() {
   const statusEl = document.getElementById('liveStatusText');
   try {
-    const res = await fetch(WORLDCUP_JSON_URL, { cache: 'no-store' });
-    if (!res.ok) {
-      console.warn('openfootball Anfrage fehlgeschlagen:', res.status);
-      if (statusEl) statusEl.textContent = `⚠️ Live-Update fehlgeschlagen (HTTP ${res.status}).`;
+    const data = await fetchWorldcupJson();
+    if (!data) {
+      if (statusEl) statusEl.textContent = '⚠️ Live-Update fehlgeschlagen (keine Quelle erreichbar).';
       return;
     }
-    const data = await res.json();
     const liveMatches = data.matches || [];
     let updated = 0;
 
@@ -1095,6 +1122,16 @@ async function refreshLiveData() {
         local.awayScore = lm.score.ft[1];
         local.status = 'done';
         updated++;
+
+        // Kein recherchierter xG-Wert für dieses Spiel hinterlegt? Dann automatisch berechnen,
+        // damit nie wieder eine Lücke entsteht. Klar als "berechnet" markiert (estimatedXg),
+        // nicht mit echten, recherchierten Werten (xgHome/xgAway) vermischt.
+        if (local.xgHome == null && local.estimatedXg == null) {
+          const forecast = calcXgForecast(local);
+          if (forecast) {
+            local.estimatedXg = { home: forecast.home, away: forecast.away };
+          }
+        }
       }
       // openfootball unterscheidet nicht zwischen "läuft gerade" und "noch nicht gespielt" -
       // ohne score bleibt der bisherige Status (z.B. 'soon') unangetastet.
