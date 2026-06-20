@@ -137,18 +137,20 @@
   .rating-poor { background: rgba(239,68,68,.22); color: #f87171; }
   .rating-none { background: rgba(255,255,255,.08); color: var(--muted); }
 
-  /* PITCH VIEW (Spielfeld mit Spielerpositionen) */
+  /* PITCH VIEW (zwei eigenständige vertikale Spielfelder, je Team eines, nebeneinander) */
   .pitch-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; }
-  .pitch-team-label { font-size: 0.78rem; font-weight: 700; color: var(--text); }
+  .pitch-two-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 460px; }
+  .pitch-team-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .pitch-team-label { font-size: 0.74rem; font-weight: 700; color: var(--text); text-align: center; }
   .pitch-field {
     position: relative; border-radius: 8px; overflow: hidden;
     background-color: #1e7a3a;
     background-image: repeating-linear-gradient(
-      0deg, rgba(255,255,255,.05) 0, rgba(255,255,255,.05) 38px,
-      transparent 38px, transparent 76px
+      0deg, rgba(255,255,255,.05) 0, rgba(255,255,255,.05) 26px,
+      transparent 26px, transparent 52px
     );
-    box-shadow: inset 0 0 40px rgba(0,0,0,.35);
-    width: 100%; max-width: 380px; aspect-ratio: 320 / 460;
+    box-shadow: inset 0 0 30px rgba(0,0,0,.35);
+    width: 100%; aspect-ratio: 200 / 320;
   }
   .pitch-svg-lines { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
   .pitch-outline { fill: none; stroke: rgba(255,255,255,.4); stroke-width: 1.5; }
@@ -157,13 +159,13 @@
   .pitch-player {
     position: absolute; transform: translate(-50%, -50%);
     display: flex; flex-direction: column; align-items: center; gap: 1px;
-    width: 17.5%; /* ~ein Fünftel der Feldbreite, verhindert Überlappung bei 4er-Reihen */
+    width: 33%;
     pointer-events: none;
   }
   .pitch-player-dot {
-    width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;
+    width: 23px; height: 23px; border-radius: 50%; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    font-size: 0.62rem; font-weight: 800; color: #0d2818;
+    font-size: 0.6rem; font-weight: 800; color: #0d2818;
     border: 2px solid rgba(255,255,255,.85);
     box-shadow: 0 1px 4px rgba(0,0,0,.4);
   }
@@ -172,18 +174,18 @@
   .pitch-player-dot.rating-ok { background: #fbbf24; }
   .pitch-player-dot.rating-poor { background: #f87171; }
   .pitch-player-dot.rating-none { background: #e2e8f0; }
-  .pitch-player-badges { display: flex; gap: 1px; height: 9px; align-items: center; }
-  .pitch-badge { font-size: 0.55rem; line-height: 1; }
-  .pitch-badge-yellow, .pitch-badge-red { width: 5px; height: 8px; border-radius: 1px; display: inline-block; }
+  .pitch-player-badges { display: flex; gap: 1px; height: 8px; align-items: center; }
+  .pitch-badge { font-size: 0.5rem; line-height: 1; }
+  .pitch-badge-yellow, .pitch-badge-red { width: 4px; height: 7px; border-radius: 1px; display: inline-block; }
   .pitch-badge-yellow { background: #fbbf24; }
   .pitch-badge-red { background: var(--red); }
   .pitch-player-name {
-    font-size: 0.56rem; font-weight: 700; color: #fff; text-align: center;
+    font-size: 0.52rem; font-weight: 700; color: #fff; text-align: center;
     text-shadow: 0 1px 3px rgba(0,0,0,.95); white-space: nowrap;
-    overflow: hidden; text-overflow: ellipsis; width: 100%; line-height: 1.15;
+    overflow: hidden; text-overflow: ellipsis; width: 100%; line-height: 1.1;
   }
   .pitch-player-rating {
-    font-size: 0.54rem; font-weight: 800; padding: 0 3px; border-radius: 3px;
+    font-size: 0.5rem; font-weight: 800; padding: 0 3px; border-radius: 3px;
     line-height: 1.3; white-space: nowrap;
   }
   .xg-val { font-size: 0.8rem; font-weight: 700; color: var(--accent3); }
@@ -1050,7 +1052,9 @@ function lastName(fullName) {
 
 // Verteilt eine Formation (z.B. "4-2-3-1") auf y-Reihen für eine SVG-Spielfeldhälfte.
 // side: 'home' (unten, Linien Richtung Mitte nach oben) oder 'away' (oben, gespiegelt)
-function layoutFormation(formation, startXI, side, pitchWidth, halfHeight) {
+// Verteilt eine Formation vertikal auf einem eigenständigen Mini-Spielfeld:
+// Torwart unten an der Grundlinie, Reihen Richtung oben (offenes Spielfeldende).
+function layoutFormationVertical(formation, startXI, pitchWidth, pitchHeight) {
   const lines = formation.split('-').map(n => parseInt(n, 10)).filter(n => !isNaN(n));
   const gk = startXI.find(p => p.pos === 'TW') || startXI[0];
   const outfield = startXI.filter(p => p !== gk);
@@ -1064,17 +1068,13 @@ function layoutFormation(formation, startXI, side, pitchWidth, halfHeight) {
 
   const positions = [];
   const totalLines = rows.length;
-  // Ränder proportional zur Feld-Halbhöhe (vorher px-Werte bei halfHeight=230, jetzt halfHeight=50)
-  const edgeMargin = halfHeight * 0.105;   // Abstand Torwart/Grundlinie
-  const innerMargin = halfHeight * 0.26;   // Abstand vorderste Reihe/Mittellinie
-  const gkY = side === 'home' ? halfHeight - edgeMargin : edgeMargin;
-  positions.push({ player: gk, x: pitchWidth / 2, y: gkY, isGk: true });
+  const edgeMargin = pitchHeight * 0.09;   // Abstand Torwart/Grundlinie unten
+  const topMargin = pitchHeight * 0.08;    // Abstand vorderste Reihe/oberer Rand
+  positions.push({ player: gk, x: pitchWidth / 2, y: pitchHeight - edgeMargin, isGk: true });
 
   rows.forEach((row, li) => {
-    const rowProgress = (li + 1) / (totalLines + 1); // 0..1 von Grundlinie zur Mittellinie
-    const y = side === 'home'
-      ? halfHeight - edgeMargin - rowProgress * (halfHeight - edgeMargin - innerMargin)
-      : edgeMargin + rowProgress * (halfHeight - edgeMargin - innerMargin);
+    const rowProgress = (li + 1) / totalLines; // 0..1, 1 = vorderste Reihe oben
+    const y = (pitchHeight - edgeMargin) - rowProgress * (pitchHeight - edgeMargin - topMargin);
     row.forEach((p, pi) => {
       const x = (pi + 1) * (pitchWidth / (row.length + 1));
       positions.push({ player: p, x, y, isGk: false });
@@ -1101,29 +1101,31 @@ function renderPitchPlayer(pos) {
     </div>`;
 }
 
+// Ein einzelnes, eigenständiges vertikales Mini-Spielfeld für ein Team.
+function renderSingleTeamPitch(teamData, teamName, formation) {
+  const PITCH_W = 100, PITCH_H = 100;
+  const positions = layoutFormationVertical(formation, teamData.startXI, PITCH_W, PITCH_H);
+  return `
+    <div class="pitch-team-col">
+      <div class="pitch-team-label">${teamName} <span class="lineup-formation">(${formation})</span></div>
+      <div class="pitch-field pitch-field-vertical">
+        <svg viewBox="0 0 200 320" class="pitch-svg-lines" preserveAspectRatio="none">
+          <rect x="1" y="1" width="198" height="318" class="pitch-outline" />
+          <rect x="55" y="244" width="90" height="75" class="pitch-line-fill" />
+          <path d="M 75 244 A 25 25 0 0 1 125 244" class="pitch-line-fill" />
+        </svg>
+        ${positions.map(renderPitchPlayer).join('')}
+      </div>
+    </div>`;
+}
+
 function renderPitchView(lineup, homeTeamName, awayTeamName) {
-  // Koordinatensystem 0-100 (Prozent), damit das Feld per CSS responsive skalieren kann.
-  const PITCH_W = 100, HALF_H = 50, PITCH_H = 100;
-  const homePositions = layoutFormation(lineup.homeFormation, lineup.home.startXI, 'home', PITCH_W, HALF_H);
-  const awayPositions = layoutFormation(lineup.awayFormation, lineup.away.startXI, 'away', PITCH_W, HALF_H)
-    .map(pos => ({ ...pos, y: pos.y + HALF_H })); // in untere SVG-Hälfte spiegeln -> tatsächlich obere Spielfeldhälfte
-
-  const allPlayers = [...homePositions, ...awayPositions];
-
   return `
     <div class="pitch-wrap">
-      <div class="pitch-team-label pitch-team-label-away">${awayTeamName} <span class="lineup-formation">(${lineup.awayFormation})</span></div>
-      <div class="pitch-field">
-        <svg viewBox="0 0 320 460" class="pitch-svg-lines" preserveAspectRatio="none">
-          <rect x="1" y="1" width="318" height="458" rx="4" class="pitch-outline" />
-          <line x1="1" y1="230" x2="319" y2="230" class="pitch-line" />
-          <circle cx="160" cy="230" r="38" class="pitch-line-fill" />
-          <rect x="90" y="1" width="140" height="46" class="pitch-line-fill" />
-          <rect x="90" y="413" width="140" height="46" class="pitch-line-fill" />
-        </svg>
-        ${allPlayers.map(renderPitchPlayer).join('')}
+      <div class="pitch-two-fields">
+        ${renderSingleTeamPitch(lineup.home, homeTeamName, lineup.homeFormation)}
+        ${renderSingleTeamPitch(lineup.away, awayTeamName, lineup.awayFormation)}
       </div>
-      <div class="pitch-team-label pitch-team-label-home">${homeTeamName} <span class="lineup-formation">(${lineup.homeFormation})</span></div>
     </div>`;
 }
 
