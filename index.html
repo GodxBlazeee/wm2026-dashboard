@@ -93,6 +93,13 @@
   .prob-pct { width: 32px; color: var(--text); font-weight: 600; }
   .match-time { font-size: 0.75rem; color: var(--muted); text-align: center; margin-top: 10px; }
   .xg-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .scorers-row { display: flex; justify-content: space-between; gap: 10px; margin-top: 10px; font-size: 0.72rem; color: var(--muted); }
+  .scorers-col { flex: 1; text-align: left; }
+  .scorers-col-away { text-align: right; }
+  .scorer-entry { line-height: 1.5; }
+  .scorer-minute { color: var(--accent3); font-weight: 600; }
+  .modal-scorers { margin-bottom: 14px; }
+  .modal-scorers-title { font-size: 0.78rem; font-weight: 700; color: var(--accent); text-align: center; margin-bottom: 8px; text-transform: uppercase; letter-spacing: .04em; }
   .xg-val { font-size: 0.8rem; font-weight: 700; color: var(--accent3); }
   .xg-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
   .xg-row-forecast { border-top: 1px dashed var(--border); }
@@ -595,11 +602,16 @@ const TEAMS = [
 function showMatchDetail(id) {
   const m = MATCHES.find(x => x.id === id);
   if (!m) return;
-  const isDone = m.status === 'done' || m.status === 'live';
+  const isFinished = m.status === 'done';
+  const isLiveNow = m.status === 'live';
+  const isDone = isFinished || isLiveNow; // beibehalten für restliche Logik unten (xG/Quote)
+  const hasKnownScore = m.homeScore != null && m.awayScore != null;
 
-  const scoreLine = isDone
-    ? `${m.homeScore ?? 0} – ${m.awayScore ?? 0}`
-    : `${m.time} MESZ`;
+  const scoreLine = isFinished
+    ? `${m.homeScore} – ${m.awayScore}`
+    : isLiveNow
+      ? (hasKnownScore ? `${m.homeScore} – ${m.awayScore} (live)` : `läuft – Spielstand folgt`)
+      : `${m.time} MESZ`;
 
   const xgLine = (isDone && m.xgHome != null)
     ? `<div class="modal-xg-line">
@@ -633,6 +645,15 @@ function showMatchDetail(id) {
       <div class="prob-row"><span class="prob-label">${m.away}</span><div class="prob-track"><div class="prob-fill prob-fill-lose" style="width:${prob.lose}%"></div></div><span class="prob-pct">${prob.lose}%</span></div>
     </div>` : '';
 
+  const scorersLine = (isFinished && (m.scorersHome?.length || m.scorersAway?.length)) ? `
+    <div class="modal-scorers">
+      <div class="modal-scorers-title">⚽ Torschützen</div>
+      <div class="scorers-row" style="font-size:0.85rem">
+        <div class="scorers-col">${formatScorers(m.scorersHome)}</div>
+        <div class="scorers-col scorers-col-away">${formatScorers(m.scorersAway)}</div>
+      </div>
+    </div>` : '';
+
   const box = document.getElementById('matchModalBox');
   box.innerHTML = `
     <button class="modal-close" onclick="closeMatchModal()">✕</button>
@@ -648,6 +669,7 @@ function showMatchDetail(id) {
       </div>
     </div>
     <div class="modal-meta">Gruppe ${m.group} · 📍 ${m.venue} · ${m.date}</div>
+    ${scorersLine}
     ${xgLine}
     ${probLine}
   `;
@@ -860,17 +882,27 @@ function formDots(form) {
   return form.map(r => `<span class="form-dot form-${r.toLowerCase()}"></span>`).join('');
 }
 
+function formatScorers(scorers) {
+  if (!scorers || !scorers.length) return '';
+  return scorers.map(g => `<div class="scorer-entry">⚽ ${g.name}${g.minute ? ` <span class="scorer-minute">${g.minute}'</span>` : ''}</div>`).join('');
+}
+
 function renderMatchCard(m) {
   const prob = calcProb(m, m);
   const isLive = m.status === 'live';
   const isDone = m.status === 'done';
-  const homeDisplayScore = isDone || isLive ? (m.homeScore ?? 0) : '';
-  const awayDisplayScore = isDone || isLive ? (m.awayScore ?? 0) : '';
-  const scoreHTML = (isDone || isLive)
+  const hasKnownScore = m.homeScore != null && m.awayScore != null;
+  const homeDisplayScore = isDone ? m.homeScore : (isLive && hasKnownScore ? m.homeScore : '');
+  const awayDisplayScore = isDone ? m.awayScore : (isLive && hasKnownScore ? m.awayScore : '');
+  const scoreHTML = isDone
     ? `<div class="score">${homeDisplayScore} – ${awayDisplayScore}</div>`
-    : `<div class="score-vs">vs</div>`;
+    : isLive
+      ? (hasKnownScore
+          ? `<div class="score">${homeDisplayScore} – ${awayDisplayScore}</div>`
+          : `<div class="score-vs">Spielstand folgt</div>`)
+      : `<div class="score-vs">vs</div>`;
   const statusHTML = isLive
-    ? `<span class="match-status-live">● LIVE ${m.minute??''}\'</span>`
+    ? `<span class="match-status-live">● LIVE</span>`
     : isDone ? `<span class="match-status-done">✓ FT</span>`
     : `<span class="match-status-soon">🕐 ${m.time}</span>`;
   const xgForecast = !isDone ? calcXgForecast(m) : null;
@@ -894,6 +926,11 @@ function renderMatchCard(m) {
         <div class="form-dots">${formDots(m.awayForm)}</div>
       </div>
     </div>
+    ${isDone && (m.scorersHome?.length || m.scorersAway?.length) ? `
+    <div class="scorers-row">
+      <div class="scorers-col">${formatScorers(m.scorersHome)}</div>
+      <div class="scorers-col scorers-col-away">${formatScorers(m.scorersAway)}</div>
+    </div>` : ''}
     ${isDone && m.xgHome != null ? `
     <div class="xg-row">
       <span class="xg-val">${m.xgHome.toFixed(2)} xG</span>
@@ -965,9 +1002,16 @@ function toMinutes(m) {
 }
 
 function renderDashboard() {
-  // Heutige/anstehende Spiele, chronologisch sortiert nach Datum + Uhrzeit
+  // Heutige/anstehende Spiele: live, oder in den nächsten 24h angesetzt - nie 'done'.
+  // Berechnet dynamisch aus der aktuellen Browser-Uhrzeit, nicht aus fest eingetragenen Daten,
+  // damit das Dashboard sich von selbst weiterbewegt statt an einem festen Datum hängen zu bleiben.
+  const nowMin = (() => {
+    const n = new Date();
+    return (n.getUTCMonth() + 1) * 31 * 1440 + n.getUTCDate() * 1440 + n.getUTCHours() * 60 + n.getUTCMinutes() + 120; // +120 = MESZ
+  })();
   const today = MATCHES
-    .filter(m => m.status === 'live' || (m.status === 'soon' && (m.date === '19.06.' || m.date === '20.06.')))
+    .filter(m => m.status !== 'done')
+    .filter(m => m.status === 'live' || (toMinutes(m) - nowMin >= -130 && toMinutes(m) - nowMin <= 24 * 60))
     .sort((a, b) => toMinutes(a) - toMinutes(b));
   document.getElementById('todayMatches').innerHTML = today.slice(0,6).map(renderMatchCard).join('');
 
@@ -1161,6 +1205,13 @@ async function refreshLiveData() {
         local.awayScore = lm.score.ft[1];
         local.status = 'done';
         updated++;
+
+        // Torschützen übernehmen, sobald sie von der Quelle geliefert werden (nur bei
+        // beendeten Spielen verfügbar - openfootball hat keine Live-Ereignisse während des Spiels).
+        if (Array.isArray(lm.goals1) || Array.isArray(lm.goals2)) {
+          local.scorersHome = (lm.goals1 || []).map(g => ({ name: g.name, minute: g.minute }));
+          local.scorersAway = (lm.goals2 || []).map(g => ({ name: g.name, minute: g.minute }));
+        }
 
         // Kein recherchierter xG-Wert für dieses Spiel hinterlegt? Dann automatisch berechnen,
         // damit nie wieder eine Lücke entsteht. Klar als "berechnet" markiert (estimatedXg),
