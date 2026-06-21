@@ -296,6 +296,30 @@
   }
   .modal-xg-line .xg-val { font-size: 0.95rem; font-weight: 800; color: var(--accent3); }
   .modal-xg-line .xg-label { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; text-align: center; }
+
+  /* MATCH-SIMULATION (Monte-Carlo, separat – fließt NICHT in die Quote oben ein) */
+  .sim-wrap { margin-top: 16px; }
+  .sim-btn {
+    width: 100%; padding: 11px 16px; border: 1px solid var(--accent);
+    background: rgba(59,130,246,.12); color: #93c5fd; border-radius: 10px;
+    font-size: 0.85rem; font-weight: 700; cursor: pointer; transition: all .2s;
+  }
+  .sim-btn:hover { background: rgba(59,130,246,.22); color: #bfdbfe; }
+  .sim-btn:disabled { opacity: .6; cursor: default; }
+  .sim-loading { margin-top: 12px; text-align: center; font-size: 0.82rem; color: var(--muted); }
+  .sim-panel { margin-top: 12px; background: var(--card2); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+  .sim-head { font-size: 0.88rem; font-weight: 800; color: var(--text); display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; }
+  .sim-sub { font-size: 0.68rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
+  .sim-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
+  .sim-stat { background: var(--card); border: 1px solid var(--border); border-radius: 9px; padding: 9px 6px; text-align: center; }
+  .sim-stat-val { display: block; font-size: 1.05rem; font-weight: 800; color: var(--accent2); }
+  .sim-stat-lbl { display: block; font-size: 0.64rem; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; margin-top: 2px; }
+  .sim-scores-title { font-size: 0.7rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin: 14px 0 8px; }
+  .sim-scores { display: flex; flex-wrap: wrap; gap: 8px; }
+  .sim-score { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; display: flex; align-items: baseline; gap: 7px; }
+  .sim-score-num { font-size: 0.92rem; font-weight: 800; color: var(--text); }
+  .sim-score-pct { font-size: 0.72rem; font-weight: 600; color: var(--accent3); }
+  .sim-note { margin-top: 12px; font-size: 0.68rem; color: var(--muted); line-height: 1.5; border-top: 1px solid var(--border); padding-top: 10px; }
 </style>
 </head>
 <body>
@@ -2394,6 +2418,13 @@ function showMatchDetail(id) {
 
   const lineupSection = isFinished ? renderLineupSection(m) : '';
 
+  // Simulation nur für noch nicht gespielte Partien anbieten (Knopf, Ergebnis erscheint darunter)
+  const simSection = !isDone ? `
+    <div class="sim-wrap">
+      <button class="sim-btn" onclick="runSimulationUI(${m.id}, this)">🎲 100.000× simulieren</button>
+      <div id="simResult"></div>
+    </div>` : '';
+
   const box = document.getElementById('matchModalBox');
   box.innerHTML = `
     <button class="modal-close" onclick="closeMatchModal()">✕</button>
@@ -2412,6 +2443,7 @@ function showMatchDetail(id) {
     ${scorersLine}
     ${xgLine}
     ${probLine}
+    ${simSection}
     ${lineupSection}
   `;
   document.getElementById('matchModal').classList.add('open');
@@ -2661,6 +2693,92 @@ function probsFromXg(xgHome, xgAway) {
     draw: Math.round((draw / total) * 100),
     lose: Math.round((lose / total) * 100),
   };
+}
+
+// ========== MATCH-SIMULATION (Monte-Carlo) ==========
+// Würfelt N komplette Spiele: je Team Tore ~ Poisson(xG), dann auszählen. Liefert neben
+// Sieg/Remis/Niederlage auch die Tor-Verteilung, Über/Unter 2,5 und "beide treffen" – also
+// die Details, die die einzelne %-Zahl nicht zeigt. Fließt bewusst NICHT in calcProb()/die
+// angezeigte Quote ein; die bleibt der entvigte Buchmacher-Konsens.
+function buildPoissonCdf(lambda, maxGoals) {
+  const cdf = [];
+  let cum = 0;
+  for (let k = 0; k <= maxGoals; k++) { cum += poissonProb(lambda, k); cdf.push(cum); }
+  cdf[cdf.length - 1] = 1; // Rest oberhalb maxGoals in die letzte Stufe, Summe = 1
+  return cdf;
+}
+function sampleFromCdf(cdf) {
+  const r = Math.random();
+  for (let k = 0; k < cdf.length; k++) { if (r <= cdf[k]) return k; }
+  return cdf.length - 1;
+}
+function simulateMatch(id, runs = 100000) {
+  const m = MATCHES.find(x => x.id === id);
+  if (!m) return null;
+  const f = calcXgForecast(m);
+  const lh = f ? f.home : (m.xgHome != null ? m.xgHome : 1.30);
+  const la = f ? f.away : (m.xgAway != null ? m.xgAway : 1.10);
+  const maxGoals = 10;
+  const cdfH = buildPoissonCdf(lh, maxGoals);
+  const cdfA = buildPoissonCdf(la, maxGoals);
+
+  let win = 0, draw = 0, lose = 0, over = 0, btts = 0, goalSum = 0;
+  const scoreCount = {};
+  for (let i = 0; i < runs; i++) {
+    const gh = sampleFromCdf(cdfH);
+    const ga = sampleFromCdf(cdfA);
+    if (gh > ga) win++; else if (gh === ga) draw++; else lose++;
+    if (gh + ga > 2) over++;            // über 2,5 Tore
+    if (gh > 0 && ga > 0) btts++;       // beide Teams treffen
+    goalSum += gh + ga;
+    const key = gh + ':' + ga;
+    scoreCount[key] = (scoreCount[key] || 0) + 1;
+  }
+  const topScores = Object.entries(scoreCount)
+    .sort((a, b) => b[1] - a[1]).slice(0, 5)
+    .map(([score, c]) => ({ score, pct: c / runs * 100 }));
+
+  return {
+    runs, lh, la,
+    win: win / runs * 100, draw: draw / runs * 100, lose: lose / runs * 100,
+    over: over / runs * 100, btts: btts / runs * 100, avgGoals: goalSum / runs,
+    topScores,
+  };
+}
+function runSimulationUI(id, btn) {
+  const out = document.getElementById('simResult');
+  if (!out) return;
+  const m = MATCHES.find(x => x.id === id);
+  if (!m) return;
+  if (btn) { btn.disabled = true; btn.textContent = '🎲 Simuliere…'; }
+  out.innerHTML = '<div class="sim-loading">🎲 Simuliere 100.000 Spiele…</div>';
+  // kurz aussetzen, damit der Lade-Text rendert, bevor die Schleife den Thread kurz blockiert
+  setTimeout(() => {
+    const r = simulateMatch(id);
+    if (btn) { btn.disabled = false; btn.textContent = '🎲 Erneut simulieren'; }
+    if (!r) { out.innerHTML = ''; return; }
+    const f = (x) => x.toFixed(1);
+    out.innerHTML = `
+      <div class="sim-panel">
+        <div class="sim-head">🎲 Simulation · ${r.runs.toLocaleString('de-AT')} Spiele
+          <span class="sim-sub">Poisson aus xG ${r.lh.toFixed(2)} / ${r.la.toFixed(2)}</span></div>
+        <div class="prob-bar" style="margin-top:10px">
+          <div class="prob-row"><span class="prob-label">${m.home}</span><div class="prob-track"><div class="prob-fill prob-fill-win" style="width:${r.win}%"></div></div><span class="prob-pct">${f(r.win)}%</span></div>
+          <div class="prob-row"><span class="prob-label">Unent.</span><div class="prob-track"><div class="prob-fill prob-fill-draw" style="width:${r.draw}%"></div></div><span class="prob-pct">${f(r.draw)}%</span></div>
+          <div class="prob-row"><span class="prob-label">${m.away}</span><div class="prob-track"><div class="prob-fill prob-fill-lose" style="width:${r.lose}%"></div></div><span class="prob-pct">${f(r.lose)}%</span></div>
+        </div>
+        <div class="sim-grid">
+          <div class="sim-stat"><span class="sim-stat-val">${f(r.avgGoals)}</span><span class="sim-stat-lbl">Ø Tore</span></div>
+          <div class="sim-stat"><span class="sim-stat-val">${f(r.over)}%</span><span class="sim-stat-lbl">Über 2,5</span></div>
+          <div class="sim-stat"><span class="sim-stat-val">${f(r.btts)}%</span><span class="sim-stat-lbl">Beide treffen</span></div>
+        </div>
+        <div class="sim-scores-title">Wahrscheinlichste Ergebnisse</div>
+        <div class="sim-scores">
+          ${r.topScores.map(s => `<div class="sim-score"><span class="sim-score-num">${s.score}</span><span class="sim-score-pct">${f(s.pct)}%</span></div>`).join('')}
+        </div>
+        <div class="sim-note">Zweitmeinung zur Verteilung. Die %-Quote oben stammt aus dem entvigten Buchmacher-Konsens, nicht aus dieser Simulation – bei einem fairen Modell liegen beide nah beieinander.</div>
+      </div>`;
+  }, 30);
 }
 
 function calcProb(home, away) {
