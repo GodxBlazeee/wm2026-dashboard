@@ -339,10 +339,6 @@
       <div id="topAssists"></div>
     </div>
   </div>
-
-  <div class="divider"></div>
-  <div class="section-title">⚡ Highlights</div>
-  <div class="grid-4" id="highlights"></div>
 </div>
 
 <!-- ===== MATCHES ===== -->
@@ -2437,21 +2433,9 @@ document.addEventListener('keydown', (e) => {
 // Sofascore Power Rankings (Vorturnier-Stärke, Stand 09.06.2026) für alle 48 Teams.
 // Dient als Basis-Anker, damit ein einzelnes untypisches Spiel (z.B. ein schwacher xG-Auftakt
 // eines Top-Teams) die Prognose nicht stärker verzerrt als die tatsächliche Mannschaftsstärke.
-// Torschützen & Vorlagengeber, Stand 19.06.2026 (Quelle: planetfootball.com, FIFA Golden Boot Tracker, FOX Sports)
-const TOP_SCORERS = [
-  { name:'Lionel Messi', flag:'🇦🇷', goals:3 },
-  { name:'Jonathan David', flag:'🇨🇦', goals:3 },
-  { name:'Kylian Mbappé', flag:'🇫🇷', goals:2 },
-  { name:'Erling Haaland', flag:'🇳🇴', goals:2 },
-  { name:'Harry Kane', flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿', goals:2 },
-];
-const TOP_ASSISTS = [
-  { name:'Alexander Isak', flag:'🇸🇪', assists:2 },
-  { name:'Chris Wood', flag:'🇳🇿', assists:2 },
-  { name:'Deniz Undav', flag:'🇩🇪', assists:2 },
-  { name:'Ryan Gravenberch', flag:'🇳🇱', assists:2 },
-  { name:'Joshua Kimmich', flag:'🇩🇪', assists:2 },
-];
+// Torschützen & Vorlagengeber werden automatisch aus den Spielberichten (MATCH_LINEUPS) berechnet,
+// siehe computeTopScorersAndAssists() weiter unten. Damit bleibt die Liste aktuell, sobald neue
+// Spielberichte eingetragen werden, ohne separat von Hand gepflegt werden zu müssen.
 
 const POWER_RANK = {
   'Spanien':2026,'Frankreich':2015,'Argentinien':1999,'Brasilien':1945,'England':1942,'Portugal':1941,
@@ -2946,6 +2930,41 @@ function toMinutes(m) {
   return (mo * 31 + d) * 1440 + h * 60 + mi;
 }
 
+// Berechnet Top-Torschützen und Top-Vorlagengeber automatisch aus allen recherchierten
+// Spielberichten (MATCH_LINEUPS). Summiert Tore/Assists je Spieler über mehrere Spiele hinweg
+// (z.B. Messi: 3 gegen Algerien) und ordnet die passende Länderflagge über das jeweilige Match zu.
+function computeTopScorersAndAssists() {
+  const goalsByPlayer = {};   // name -> { goals, flag }
+  const assistsByPlayer = {}; // name -> { assists, flag }
+
+  MATCHES.forEach(m => {
+    const lineup = MATCH_LINEUPS[m.id];
+    if (!lineup) return;
+    const sides = [
+      { team: lineup.home, flag: m.homeFlag },
+      { team: lineup.away, flag: m.awayFlag },
+    ];
+    sides.forEach(({ team, flag }) => {
+      if (!team) return;
+      const all = [...(team.startXI || []), ...(team.bench || [])];
+      all.forEach(p => {
+        if (p.goals) {
+          if (!goalsByPlayer[p.name]) goalsByPlayer[p.name] = { name: p.name, flag, goals: 0 };
+          goalsByPlayer[p.name].goals += p.goals;
+        }
+        if (p.assists) {
+          if (!assistsByPlayer[p.name]) assistsByPlayer[p.name] = { name: p.name, flag, assists: 0 };
+          assistsByPlayer[p.name].assists += p.assists;
+        }
+      });
+    });
+  });
+
+  const topScorers = Object.values(goalsByPlayer).sort((a, b) => b.goals - a.goals).slice(0, 5);
+  const topAssists = Object.values(assistsByPlayer).sort((a, b) => b.assists - a.assists).slice(0, 5);
+  return { topScorers, topAssists };
+}
+
 function renderDashboard() {
   // Heutige/anstehende Spiele: live, oder in den nächsten 24h angesetzt - nie 'done'.
   // Berechnet dynamisch aus der aktuellen Browser-Uhrzeit, nicht aus fest eingetragenen Daten,
@@ -2960,8 +2979,9 @@ function renderDashboard() {
     .sort((a, b) => toMinutes(a) - toMinutes(b));
   document.getElementById('todayMatches').innerHTML = today.slice(0,6).map(renderMatchCard).join('');
 
-  // Top 5 Torschützen
-  document.getElementById('topScorers').innerHTML = TOP_SCORERS.map((p,i) => `
+  // Top 5 Torschützen & Assists, automatisch aus den Spielberichten berechnet
+  const { topScorers, topAssists } = computeTopScorersAndAssists();
+  document.getElementById('topScorers').innerHTML = topScorers.map((p,i) => `
     <div class="odds-card" style="margin-bottom:8px">
       <div class="odds-rank">#${i+1}</div>
       <div class="odds-flag">${p.flag}</div>
@@ -2969,27 +2989,12 @@ function renderDashboard() {
       <div class="odds-pct">${p.goals} ⚽</div>
     </div>`).join('');
 
-  // Top 5 Assists
-  document.getElementById('topAssists').innerHTML = TOP_ASSISTS.map((p,i) => `
+  document.getElementById('topAssists').innerHTML = topAssists.map((p,i) => `
     <div class="odds-card" style="margin-bottom:8px">
       <div class="odds-rank">#${i+1}</div>
       <div class="odds-flag">${p.flag}</div>
       <div class="odds-name">${p.name}</div>
       <div class="odds-pct">${p.assists} 🅰️</div>
-    </div>`).join('');
-
-  // Highlights
-  const highlights = [
-    { icon:'⚽', val:'7:1', lbl:'Deutschland vs Curaçao', color:'var(--accent2)' },
-    { icon:'🔥', val:'3:0', lbl:'Kanada vs Katar', color:'var(--accent3)' },
-    { icon:'⭐', val:'3 Tore', lbl:'Messi & Jonathan David', color:'var(--accent)' },
-    { icon:'🏆', val:'4:1', lbl:'Schweiz führt Gruppe B', color:'#c084fc' },
-  ];
-  document.getElementById('highlights').innerHTML = highlights.map(h => `
-    <div class="card" style="text-align:center;border-color:${h.color}40">
-      <div style="font-size:2rem">${h.icon}</div>
-      <div style="font-size:1.6rem;font-weight:800;color:${h.color};margin:8px 0">${h.val}</div>
-      <div style="font-size:0.8rem;color:var(--muted)">${h.lbl}</div>
     </div>`).join('');
 
   document.getElementById('updateTime').textContent = '⏱️ Letztes Update: ' + new Date().toLocaleTimeString('de-AT');
